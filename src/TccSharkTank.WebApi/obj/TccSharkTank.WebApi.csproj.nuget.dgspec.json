@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj": {}
+    "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj": {}
   },
   "projects": {
-    "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj": {
+    "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj",
+        "projectUniqueName": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj",
         "projectName": "TccSharkTank.Application",
-        "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj",
+        "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj",
         "packagesPath": "/Users/lucas/.nuget/packages/",
-        "outputPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/obj/",
+        "outputPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/lucas/.nuget/NuGet/NuGet.Config"
@@ -26,8 +26,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
-                "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj"
+              "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
+                "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj"
               }
             }
           }
@@ -66,14 +66,14 @@
         }
       }
     },
-    "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
+    "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
+        "projectUniqueName": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
         "projectName": "TccSharkTank.Domain",
-        "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
+        "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
         "packagesPath": "/Users/lucas/.nuget/packages/",
-        "outputPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/obj/",
+        "outputPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/lucas/.nuget/NuGet/NuGet.Config"
@@ -124,14 +124,14 @@
         }
       }
     },
-    "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj": {
+    "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj",
+        "projectUniqueName": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj",
         "projectName": "TccSharkTank.Infrastructure",
-        "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj",
+        "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj",
         "packagesPath": "/Users/lucas/.nuget/packages/",
-        "outputPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Infrastructure/obj/",
+        "outputPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Infrastructure/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/lucas/.nuget/NuGet/NuGet.Config"
@@ -146,11 +146,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj": {
-                "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj"
+              "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj": {
+                "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj"
               },
-              "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
-                "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj"
+              "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
+                "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj"
               }
             }
           }
@@ -209,14 +209,14 @@
         }
       }
     },
-    "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj": {
+    "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj",
+        "projectUniqueName": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj",
         "projectName": "TccSharkTank.WebApi",
-        "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj",
+        "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj",
         "packagesPath": "/Users/lucas/.nuget/packages/",
-        "outputPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.WebApi/obj/",
+        "outputPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.WebApi/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/lucas/.nuget/NuGet/NuGet.Config"
@@ -231,11 +231,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj": {
-                "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj"
+              "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj": {
+                "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/TccSharkTank.Application.csproj"
               },
-              "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj": {
-                "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj"
+              "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj": {
+                "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj"
               }
             }
           }

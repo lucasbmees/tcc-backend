@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {}
+    "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {}
   },
   "projects": {
-    "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
+    "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
+        "projectUniqueName": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
         "projectName": "TccSharkTank.Domain",
-        "projectPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
+        "projectPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/TccSharkTank.Domain.csproj",
         "packagesPath": "/Users/lucas/.nuget/packages/",
-        "outputPath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Domain/obj/",
+        "outputPath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Domain/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/lucas/.nuget/NuGet/NuGet.Config"

@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = TccSharkTank.Application
-build_property.ProjectDir = /Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Application/
+build_property.ProjectDir = /Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Application/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

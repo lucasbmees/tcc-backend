@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "JRo4egsY73c=",
+  "dgSpecHash": "YUn6RMmzRzU=",
   "success": true,
-  "projectFilePath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj",
+  "projectFilePath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.Infrastructure/TccSharkTank.Infrastructure.csproj",
   "expectedPackageFiles": [
     "/Users/lucas/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
     "/Users/lucas/.nuget/packages/microsoft.bcl.asyncinterfaces/6.0.0/microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",

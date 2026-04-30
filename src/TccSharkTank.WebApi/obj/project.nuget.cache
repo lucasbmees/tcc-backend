@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "oLES38hXQ1w=",
+  "dgSpecHash": "UDxlXR+7+Mw=",
   "success": true,
-  "projectFilePath": "/Users/lucas/Desktop/faculdade/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj",
+  "projectFilePath": "/Users/lucas/Desktop/faculdade/tcc-26/TCC-2026/src/TccSharkTank.WebApi/TccSharkTank.WebApi.csproj",
   "expectedPackageFiles": [
     "/Users/lucas/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
     "/Users/lucas/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/8.0.19/microsoft.aspnetcore.authentication.jwtbearer.8.0.19.nupkg.sha512",

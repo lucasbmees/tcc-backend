@@ -100,6 +100,24 @@ internal sealed class IdaCategoriaMap : IEntityTypeConfiguration<IdaCategoria>
         e.Property(x => x.Id).HasColumnName("ida_categoria_id").ValueGeneratedOnAdd();
         e.Property(x => x.Nome).HasColumnName("ida_categoria_nome").HasMaxLength(100).IsRequired();
         e.HasIndex(x => x.Nome).IsUnique();
+
+        e.HasData(
+            new IdaCategoria { Id = 1, Nome = "tecnologia" },
+            new IdaCategoria { Id = 2, Nome = "Agro" },
+            new IdaCategoria { Id = 3, Nome = "inovacao" },
+            new IdaCategoria { Id = 4, Nome = "infraestrutura" },
+            new IdaCategoria { Id = 5, Nome = "moda" },
+            new IdaCategoria { Id = 6, Nome = "automobilismo" },
+            new IdaCategoria { Id = 7, Nome = "sustentabilidade" },
+            new IdaCategoria { Id = 8, Nome = "Comodidade" },
+            new IdaCategoria { Id = 9, Nome = "lazer" },
+            new IdaCategoria { Id = 10, Nome = "uso diario" },
+            new IdaCategoria { Id = 11, Nome = "Moradia" },
+            new IdaCategoria { Id = 12, Nome = "Energia" },
+            new IdaCategoria { Id = 13, Nome = "maritimo" },
+            new IdaCategoria { Id = 14, Nome = "aeronáutico" },
+            new IdaCategoria { Id = 15, Nome = "outros" }
+        );
     }
 }
 
@@ -345,4 +363,3 @@ internal sealed class NtfNotificacaoMap : IEntityTypeConfiguration<NtfNotificaca
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
-
