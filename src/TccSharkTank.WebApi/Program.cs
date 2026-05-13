@@ -6,9 +6,11 @@ using TccSharkTank.Application.Abstractions.Security;
 using TccSharkTank.Infrastructure;
 using TccSharkTank.WebApi.Middleware;
 using TccSharkTank.WebApi.Security;
+// Adicione o namespace do seu DbContext se necessário (ex: using TccSharkTank.Infrastructure.Persistence;)
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configurações de Serviços
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -34,12 +36,13 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Injeção de Dependência da Infraestrutura e Segurança
 builder.Services.AddInfrastructure(builder.Configuration);
-
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
+// Configuração de Autenticação JWT
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var key = jwtSection["Key"] ?? "dev-secret-change-me-please-dev-secret-change-me-please";
 
@@ -63,17 +66,36 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// ==========================================
+// BLOCO PARA FORÇAR CRIAÇÃO DAS TABELAS
+// ==========================================
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        // Substitua 'AppDbContext' pelo nome exato da sua classe de contexto se for diferente
+        var context = services.GetRequiredService<TccSharkTank.Infrastructure.Persistence.AppDbContext>();
+        context.Database.EnsureCreated();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocorreu um erro ao criar as tabelas do banco de dados.");
+    }
+}
+// ==========================================
+
+// Pipeline de Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
+// Swagger habilitado para todos os ambientes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TccSharkTank API v1");
-        c.RoutePrefix = "";
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TccSharkTank API v1");
+    c.RoutePrefix = ""; 
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
