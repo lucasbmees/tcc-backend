@@ -25,7 +25,9 @@ public interface IPropostaService
 {
     Task<PropostaResponse> EnviarInicialAsync(long ideiaId, long usuarioId, CreatePropostaRequest request, CancellationToken cancellationToken);
     Task<PropostaResponse> ResponderAsync(long propostaId, long usuarioId, ResponderPropostaRequest request, CancellationToken cancellationToken);
+    Task<PropostaResponse> ResponderInvestidorAsync(long propostaId, long usuarioId, ResponderPropostaRequest request, CancellationToken cancellationToken);
     Task<List<PropostaResponse>> ListarMinhasAsync(long usuarioId, CancellationToken cancellationToken);
+    Task<List<PropostaResponse>> ListarRecebidasAsync(long empreendedorId, CancellationToken cancellationToken);
     Task<PropostaResponse> EncerrarAsync(long propostaId, long usuarioId, CancellationToken cancellationToken);
     Task<List<PropostaResponse>> ListarDaIdeiaAsync(long ideiaId, long donoId, CancellationToken cancellationToken); // ← NOVO
 }
@@ -301,15 +303,30 @@ public sealed class PropostaService : IPropostaService
 {
     private readonly IPropostaRepository _propostas;
     private readonly IIdeiaRepository _ideias;
+    private readonly INotificacaoRepository _notificacoes;
     private readonly ILookupRepository _lookup;
     private readonly IUnitOfWork _uow;
     private readonly IClock _clock;
     private readonly ILogService _logs;
 
-    public PropostaService(IPropostaRepository propostas, IIdeiaRepository ideias, ILookupRepository lookup, IUnitOfWork uow, IClock clock, ILogService logs)
+    private const int NtfTipoPrpAceita = 1;
+    private const int NtfTipoPrpRecusada = 2;
+    private const int NtfTipoAlerta = 3;
+    private const int NtfTipoPrpRecebida = 5;
+    private const int NtfTipoPrpContraproposta = 6;
+
+    public PropostaService(
+        IPropostaRepository propostas,
+        IIdeiaRepository ideias,
+        INotificacaoRepository notificacoes,
+        ILookupRepository lookup,
+        IUnitOfWork uow,
+        IClock clock,
+        ILogService logs)
     {
         _propostas = propostas;
         _ideias = ideias;
+        _notificacoes = notificacoes;
         _lookup = lookup;
         _uow = uow;
         _clock = clock;
@@ -350,6 +367,19 @@ public sealed class PropostaService : IPropostaService
         });
 
         await _propostas.AddAsync(proposta, cancellationToken);
+        if (await _lookup.GetNotificacaoTipoByIdAsync(NtfTipoPrpRecebida, cancellationToken) is null)
+        {
+            throw new AppException("Configuração de notificação (prp recebida) inválida.", 500);
+        }
+
+        await _notificacoes.AddAsync(new NtfNotificacao
+        {
+            UsuarioId = ideia.UsuarioId,
+            TipoId = NtfTipoPrpRecebida,
+            Mensagem = $"Nova proposta recebida na ideia #{ideiaId}. Clique para responder.",
+            Lida = false,
+            CreateDate = _clock.UtcNow
+        }, cancellationToken);
         await _logs.RegistrarAsync("proposta", usuarioId: usuarioId, ideiaId: ideiaId, propostaId: null, descricao: $"Envio de proposta para ideia {ideia.Nome}", cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
         return await MapAsync(proposta.Id, cancellationToken);
@@ -379,6 +409,11 @@ public sealed class PropostaService : IPropostaService
             throw new AppException("Aceite inválido.", 400);
         }
 
+        if (request.AceiteId == 3 && string.IsNullOrWhiteSpace(request.Retorno))
+        {
+            throw new AppException("O retorno é obrigatório para contraproposta.", 400);
+        }
+
         proposta.Infos.Add(new PrpInfo
         {
             Id = 0,
@@ -392,7 +427,110 @@ public sealed class PropostaService : IPropostaService
         });
 
         _propostas.Update(proposta);
+
+        var notifTipoId = request.AceiteId switch
+        {
+            1 => NtfTipoPrpAceita,
+            2 => NtfTipoPrpRecusada,
+            3 => NtfTipoPrpContraproposta,
+            _ => NtfTipoAlerta
+        };
+
+        if (await _lookup.GetNotificacaoTipoByIdAsync(notifTipoId, cancellationToken) is null)
+        {
+            throw new AppException("Configuração de notificação inválida.", 500);
+        }
+
+        var mensagem = request.AceiteId switch
+        {
+            1 => $"Sua proposta para a ideia #{ideia.Id} foi aceita.",
+            2 => $"Sua proposta para a ideia #{ideia.Id} foi recusada.",
+            3 => $"O empreendedor enviou uma contraproposta na ideia #{ideia.Id}: \"{request.Retorno!.Trim()}\"",
+            _ => $"A proposta da ideia #{ideia.Id} teve uma atualização."
+        };
+
+        await _notificacoes.AddAsync(new NtfNotificacao
+        {
+            UsuarioId = proposta.UsuarioId,
+            TipoId = notifTipoId,
+            Mensagem = mensagem,
+            Lida = false,
+            CreateDate = _clock.UtcNow
+        }, cancellationToken);
+
         await _logs.RegistrarAsync("proposta", usuarioId: usuarioId, ideiaId: ideia.Id, propostaId: proposta.Id, descricao: $"Resposta de proposta {proposta.Id} para ideia {ideia.Nome}", cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
+        return await MapAsync(proposta.Id, cancellationToken);
+    }
+
+    public async Task<PropostaResponse> ResponderInvestidorAsync(long propostaId, long usuarioId, ResponderPropostaRequest request, CancellationToken cancellationToken)
+    {
+        var proposta = await _propostas.GetByIdAsync(propostaId, cancellationToken);
+        if (proposta is null)
+        {
+            throw new AppException("Proposta não encontrada.", 404);
+        }
+
+        if (proposta.UsuarioId != usuarioId)
+        {
+            throw new AppException("Você não tem permissão para responder esta proposta.", 403);
+        }
+
+        if (request.AceiteId is not (1 or 2))
+        {
+            throw new AppException("Aceite inválido.", 400);
+        }
+
+        if (await _lookup.GetPropostaAceiteByIdAsync(request.AceiteId, cancellationToken) is null)
+        {
+            throw new AppException("Aceite inválido.", 400);
+        }
+
+        var ultima = proposta.Infos.OrderByDescending(i => i.CreateDate).FirstOrDefault();
+        if (ultima is null || ultima.AceiteId != 3 || string.IsNullOrWhiteSpace(ultima.Retorno))
+        {
+            throw new AppException("Não existe contraproposta pendente para responder.", 400);
+        }
+
+        proposta.Infos.Add(new PrpInfo
+        {
+            Id = 0,
+            Mensagem = null,
+            Valor = 0,
+            FatiaPret = 0,
+            AceiteId = request.AceiteId,
+            Retorno = null,
+            CreateDate = _clock.UtcNow,
+            UpdateDate = _clock.UtcNow
+        });
+
+        _propostas.Update(proposta);
+
+        var ideia = proposta.Ideia ?? await _ideias.GetByIdAsync(proposta.IdeiaId, cancellationToken);
+        if (ideia is null)
+        {
+            throw new AppException("Ideia não encontrada.", 404);
+        }
+
+        if (await _lookup.GetNotificacaoTipoByIdAsync(NtfTipoAlerta, cancellationToken) is null)
+        {
+            throw new AppException("Configuração de notificação inválida.", 500);
+        }
+
+        var mensagem = request.AceiteId == 1
+            ? $"O investidor aceitou a contraproposta na ideia #{ideia.Id}."
+            : $"O investidor recusou a contraproposta na ideia #{ideia.Id}.";
+
+        await _notificacoes.AddAsync(new NtfNotificacao
+        {
+            UsuarioId = ideia.UsuarioId,
+            TipoId = NtfTipoAlerta,
+            Mensagem = mensagem,
+            Lida = false,
+            CreateDate = _clock.UtcNow
+        }, cancellationToken);
+
+        await _logs.RegistrarAsync("proposta", usuarioId: usuarioId, ideiaId: ideia.Id, propostaId: proposta.Id, descricao: $"Resposta do investidor para contraproposta {proposta.Id}", cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
         return await MapAsync(proposta.Id, cancellationToken);
     }
@@ -400,6 +538,12 @@ public sealed class PropostaService : IPropostaService
     public async Task<List<PropostaResponse>> ListarMinhasAsync(long usuarioId, CancellationToken cancellationToken)
     {
         var propostas = await _propostas.ListByUsuarioAsync(usuarioId, cancellationToken);
+        return propostas.Select(Map).ToList();
+    }
+
+    public async Task<List<PropostaResponse>> ListarRecebidasAsync(long empreendedorId, CancellationToken cancellationToken)
+    {
+        var propostas = await _propostas.ListRecebidasAsync(empreendedorId, cancellationToken);
         return propostas.Select(Map).ToList();
     }
 

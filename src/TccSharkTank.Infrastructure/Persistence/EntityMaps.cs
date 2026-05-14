@@ -334,7 +334,9 @@ internal sealed class NtfTipoMap : IEntityTypeConfiguration<NtfTipo>
             new NtfTipo { Id = 1, Nome = "prp aceita" },
             new NtfTipo { Id = 2, Nome = "prp recusada" },
             new NtfTipo { Id = 3, Nome = "alerta" },
-            new NtfTipo { Id = 4, Nome = "n" }
+            new NtfTipo { Id = 4, Nome = "n" },
+            new NtfTipo { Id = 5, Nome = "prp recebida" },
+            new NtfTipo { Id = 6, Nome = "prp contraproposta" }
         );
     }
 }
