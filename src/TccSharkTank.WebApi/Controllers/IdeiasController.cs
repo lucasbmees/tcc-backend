@@ -29,8 +29,15 @@ public sealed class IdeiasController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet]
-    public Task<List<IdeiaDetailsResponse>> List([FromQuery] int? categoriaId, CancellationToken cancellationToken)
-        => _ideias.ListarAsync(categoriaId, cancellationToken);
+    public Task<List<IdeiaDetailsResponse>> List(
+        [FromQuery] string? termo,
+        [FromQuery] int? categoriaId,
+        [FromQuery] int? estagioId,
+        [FromQuery] string? regiao,
+        [FromQuery] decimal? valorMin,
+        [FromQuery] decimal? valorMax,
+        CancellationToken cancellationToken)
+        => _ideias.ListarAsync(termo, categoriaId, estagioId, regiao, valorMin, valorMax, cancellationToken);
 
     [AllowAnonymous]
     [HttpGet("{id:long}")]
@@ -58,6 +65,14 @@ public sealed class IdeiasController : ControllerBase
 
         await using var stream = arquivo.OpenReadStream();
         return await _ideias.UploadDocumentoAsync(id, userId, stream, arquivo.FileName, cancellationToken);
+    }
+
+    [Authorize]
+    [HttpPost("{id:long}/comentarios")]
+    public Task<ComentarioResponse> PostComentario([FromRoute] long id, [FromBody] CreateComentarioRequest request, CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId ?? throw new TccSharkTank.Application.Common.AppException("Não autenticado.", 401);
+        return _ideias.ComentarAsync(id, userId, request, cancellationToken);
     }
 }
 

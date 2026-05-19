@@ -38,5 +38,15 @@ public sealed class UsuPerfil : AuditableEntityBase<long>
     public DateTime? DataNasc { get; set; }
     public string? LinkRedes { get; set; }
 
+    // Campos específicos para Investidor
+    public decimal? InvestTicketMin { get; set; }
+    public decimal? InvestTicketMax { get; set; }
+    public string? InvestInteresses { get; set; } // Categorias separadas por vírgula ou JSON
+
+    // Preferências de Notificação (Módulo 7)
+    public bool ReceberEmailPropostas { get; set; } = true;
+    public bool ReceberEmailMensagens { get; set; } = true;
+    public bool ReceberEmailAlertas { get; set; } = true;
+
     public UsuUsuario? Usuario { get; set; }
 }

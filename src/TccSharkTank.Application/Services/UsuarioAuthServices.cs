@@ -190,6 +190,12 @@ public sealed class UsuarioService : IUsuarioService
             usuario.Perfil.Cep = request.Perfil.Cep;
             usuario.Perfil.DataNasc = request.Perfil.DataNasc;
             usuario.Perfil.LinkRedes = request.Perfil.LinkRedes;
+            usuario.Perfil.InvestTicketMin = request.Perfil.InvestTicketMin;
+            usuario.Perfil.InvestTicketMax = request.Perfil.InvestTicketMax;
+            usuario.Perfil.InvestInteresses = request.Perfil.InvestInteresses;
+            if (request.Perfil.ReceberEmailPropostas.HasValue) usuario.Perfil.ReceberEmailPropostas = request.Perfil.ReceberEmailPropostas.Value;
+            if (request.Perfil.ReceberEmailMensagens.HasValue) usuario.Perfil.ReceberEmailMensagens = request.Perfil.ReceberEmailMensagens.Value;
+            if (request.Perfil.ReceberEmailAlertas.HasValue) usuario.Perfil.ReceberEmailAlertas = request.Perfil.ReceberEmailAlertas.Value;
             usuario.Perfil.UpdateDate = _clock.UtcNow;
         }
 
@@ -239,6 +245,12 @@ public sealed class UsuarioService : IUsuarioService
                     Cep: u.Perfil.Cep,
                     DataNasc: u.Perfil.DataNasc,
                     LinkRedes: u.Perfil.LinkRedes,
+                    InvestTicketMin: u.Perfil.InvestTicketMin,
+                    InvestTicketMax: u.Perfil.InvestTicketMax,
+                    InvestInteresses: u.Perfil.InvestInteresses,
+                    ReceberEmailPropostas: u.Perfil.ReceberEmailPropostas,
+                    ReceberEmailMensagens: u.Perfil.ReceberEmailMensagens,
+                    ReceberEmailAlertas: u.Perfil.ReceberEmailAlertas,
                     CreateDate: u.Perfil.CreateDate,
                     UpdateDate: u.Perfil.UpdateDate)
         );

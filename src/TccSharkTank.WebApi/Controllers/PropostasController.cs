@@ -68,13 +68,22 @@ public sealed class PropostasController : ControllerBase
     }
 
     [Authorize(Roles = "empreendedor")]
-[HttpGet("ideias/{ideiaId:long}/propostas")]
-public Task<List<PropostaResponse>> ListarDaIdeia(
-    [FromRoute] long ideiaId,
-    CancellationToken cancellationToken)
-{
-    var userId = _currentUser.UserId
-        ?? throw new TccSharkTank.Application.Common.AppException("Não autenticado.", 401);
-    return _propostas.ListarDaIdeiaAsync(ideiaId, userId, cancellationToken);
-}
+    [HttpGet("ideias/{ideiaId:long}/propostas")]
+    public Task<List<PropostaResponse>> ListarDaIdeia(
+        [FromRoute] long ideiaId,
+        CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId
+            ?? throw new TccSharkTank.Application.Common.AppException("Não autenticado.", 401);
+        return _propostas.ListarDaIdeiaAsync(ideiaId, userId, cancellationToken);
+    }
+
+    [Authorize]
+    [HttpGet("propostas/{propostaId:long}/contrato")]
+    public async Task<IActionResult> DownloadContrato([FromRoute] long propostaId, [FromServices] IJuridicoService juridico, CancellationToken cancellationToken)
+    {
+        var conteudo = await juridico.GerarTermoInvestimentoAsync(propostaId, cancellationToken);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(conteudo);
+        return File(bytes, "text/markdown", $"Contrato-Investimento-{propostaId}.md");
+    }
 }

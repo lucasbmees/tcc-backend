@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TccSharkTank.WebApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+32f3363441f08f0637fb5314b66deef4d979166b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d1c36433e20e1df39b89c7aa812373d490a360eb")]
 [assembly: System.Reflection.AssemblyProductAttribute("TccSharkTank.WebApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TccSharkTank.WebApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
