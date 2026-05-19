@@ -15,9 +15,18 @@ public sealed class AppDbContext : DbContext
 
     public DbSet<IdaIdeia> IdaIdeias => Set<IdaIdeia>();
     public DbSet<IdaStatus> IdaStatuses => Set<IdaStatus>();
+    public DbSet<IdaEstagio> IdaEstagios => Set<IdaEstagio>();
     public DbSet<IdaCategoria> IdaCategorias => Set<IdaCategoria>();
-    public DbSet<IdaInfo> IdaInfos => Set<IdaInfo>();
+    public DbSet<IdaComentario> IdaComentarios => Set<IdaComentario>();
     public DbSet<IdaDocumento> IdaDocumentos => Set<IdaDocumento>();
+    public DbSet<IdaInfo> IdaInfos => Set<IdaInfo>();
+
+    public DbSet<ChtConversa> ChtConversas => Set<ChtConversa>();
+    public DbSet<ChtMensagem> ChtMensagens => Set<ChtMensagem>();
+
+    public DbSet<PgtPagamento> PgtPagamentos => Set<PgtPagamento>();
+
+    public DbSet<GovDenuncia> GovDenuncias => Set<GovDenuncia>();
 
     public DbSet<PrpProposta> PrpPropostas => Set<PrpProposta>();
     public DbSet<PrpAceite> PrpAceites => Set<PrpAceite>();

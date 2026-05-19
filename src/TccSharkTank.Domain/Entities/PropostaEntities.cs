@@ -8,9 +8,8 @@ public sealed class PrpAceite
     public ICollection<PrpInfo> Infos { get; set; } = new List<PrpInfo>();
 }
 
-public sealed class PrpProposta
+public sealed class PrpProposta : AuditableEntityBase<long>
 {
-    public long Id { get; set; }
     public long IdeiaId { get; set; }
     public long UsuarioId { get; set; }
     public bool Status { get; set; } = true;

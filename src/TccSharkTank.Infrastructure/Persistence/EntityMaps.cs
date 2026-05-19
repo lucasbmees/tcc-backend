@@ -61,7 +61,13 @@ internal sealed class UsuPerfilMap : IEntityTypeConfiguration<UsuPerfil>
         e.Property(x => x.Descricao).HasColumnName("usu_perfil_descricao").HasMaxLength(2000);
         e.Property(x => x.Cep).HasColumnName("usu_perfil_cep").HasMaxLength(20);
         e.Property(x => x.DataNasc).HasColumnName("usu_perfil_data_nasc");
-        e.Property(x => x.LinkRedes).HasColumnName("usu_perfil_link_redes").HasMaxLength(2000);
+        e.Property(x => x.LinkRedes).HasColumnName("usu_perfil_link_redes").HasMaxLength(1000);
+        e.Property(x => x.InvestTicketMin).HasColumnName("usu_perfil_invest_ticket_min").HasPrecision(18, 2);
+        e.Property(x => x.InvestTicketMax).HasColumnName("usu_perfil_invest_ticket_max").HasPrecision(18, 2);
+        e.Property(x => x.InvestInteresses).HasColumnName("usu_perfil_invest_interesses").HasMaxLength(2000);
+        e.Property(x => x.ReceberEmailPropostas).HasColumnName("usu_perfil_email_propostas").HasDefaultValue(true);
+        e.Property(x => x.ReceberEmailMensagens).HasColumnName("usu_perfil_email_mensagens").HasDefaultValue(true);
+        e.Property(x => x.ReceberEmailAlertas).HasColumnName("usu_perfil_email_alertas").HasDefaultValue(true);
         e.Property(x => x.CreateDate).HasColumnName("usu_perfil_create_date").IsRequired();
         e.Property(x => x.UpdateDate).HasColumnName("usu_perfil_update_date").IsRequired();
 
@@ -87,6 +93,25 @@ internal sealed class IdaStatusMap : IEntityTypeConfiguration<IdaStatus>
             new IdaStatus { Id = 1, Nome = "pendente" },
             new IdaStatus { Id = 2, Nome = "aprovada" },
             new IdaStatus { Id = 3, Nome = "reprovada" }
+        );
+    }
+}
+
+internal sealed class IdaEstagioMap : IEntityTypeConfiguration<IdaEstagio>
+{
+    public void Configure(EntityTypeBuilder<IdaEstagio> e)
+    {
+        e.ToTable("ida_estagio");
+        e.HasKey(x => x.Id);
+        e.Property(x => x.Id).HasColumnName("ida_estagio_id").ValueGeneratedOnAdd();
+        e.Property(x => x.Nome).HasColumnName("ida_estagio_nome").HasMaxLength(100).IsRequired();
+        e.HasIndex(x => x.Nome).IsUnique();
+
+        e.HasData(
+            new IdaEstagio { Id = 1, Nome = "Ideação" },
+            new IdaEstagio { Id = 2, Nome = "MVP" },
+            new IdaEstagio { Id = 3, Nome = "Tração" },
+            new IdaEstagio { Id = 4, Nome = "Scale-up" }
         );
     }
 }
@@ -132,10 +157,15 @@ internal sealed class IdaIdeiaMap : IEntityTypeConfiguration<IdaIdeia>
         e.Property(x => x.StatusId).HasColumnName("ida_status_id").IsRequired();
         e.Property(x => x.MotivoStatus).HasColumnName("ida_motivo_status").HasMaxLength(2000);
         e.Property(x => x.CategoriaId).HasColumnName("ida_categoria_id").IsRequired();
+        e.Property(x => x.EstagioId).HasColumnName("ida_estagio_id").HasDefaultValue(1).IsRequired();
         e.Property(x => x.Nome).HasColumnName("ida_nome").HasMaxLength(200).IsRequired();
+        e.Property(x => x.Regiao).HasColumnName("ida_regiao").HasMaxLength(100);
+        e.Property(x => x.CreateDate).HasColumnName("ida_create_date").IsRequired();
+        e.Property(x => x.UpdateDate).HasColumnName("ida_update_date").IsRequired();
 
         e.HasIndex(x => x.Nome).IsUnique();
         e.HasIndex(x => x.CategoriaId).HasDatabaseName("ix_ida_ideia_ida_categoria_id");
+        e.HasIndex(x => x.EstagioId).HasDatabaseName("ix_ida_ideia_ida_estagio_id");
 
         e.HasOne(x => x.Usuario)
             .WithMany(u => u.Ideias)
@@ -145,6 +175,11 @@ internal sealed class IdaIdeiaMap : IEntityTypeConfiguration<IdaIdeia>
         e.HasOne(x => x.Status)
             .WithMany(s => s.Ideias)
             .HasForeignKey(x => x.StatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        e.HasOne(x => x.Estagio)
+            .WithMany(est => est.Ideias)
+            .HasForeignKey(x => x.EstagioId)
             .OnDelete(DeleteBehavior.Restrict);
 
         e.HasOne(x => x.Categoria)
@@ -167,6 +202,7 @@ internal sealed class IdaInfoMap : IEntityTypeConfiguration<IdaInfo>
         e.Property(x => x.LinkVideo).HasColumnName("ida_info_link_video").HasMaxLength(2000);
         e.Property(x => x.Imagem).HasColumnName("ida_info_imagem").HasMaxLength(2000);
         e.Property(x => x.Fatia).HasColumnName("ida_info_fatia").HasPrecision(5, 2).IsRequired();
+        e.Property(x => x.ValorCaptacao).HasColumnName("ida_info_valor_captacao").HasPrecision(18, 2).HasDefaultValue(0m).IsRequired();
         e.Property(x => x.CreateDate).HasColumnName("ida_info_create_date").IsRequired();
         e.Property(x => x.UpdateDate).HasColumnName("ida_info_update_date").IsRequired();
 
@@ -179,20 +215,152 @@ internal sealed class IdaInfoMap : IEntityTypeConfiguration<IdaInfo>
     }
 }
 
+internal sealed class IdaComentarioMap : IEntityTypeConfiguration<IdaComentario>
+{
+    public void Configure(EntityTypeBuilder<IdaComentario> e)
+    {
+        e.ToTable("ida_comentario");
+        e.HasKey(x => x.Id);
+        e.Property(x => x.Id).HasColumnName("ida_comentario_id").ValueGeneratedOnAdd();
+        e.Property(x => x.IdeiaId).HasColumnName("ida_comentario_ideia_id").IsRequired();
+        e.Property(x => x.UsuarioId).HasColumnName("ida_comentario_usuario_id").IsRequired();
+        e.Property(x => x.ParentId).HasColumnName("ida_comentario_parent_id");
+        e.Property(x => x.Texto).HasColumnName("ida_comentario_texto").HasMaxLength(4000).IsRequired();
+        e.Property(x => x.CreateDate).HasColumnName("ida_comentario_create_date").IsRequired();
+        e.Property(x => x.UpdateDate).HasColumnName("ida_comentario_update_date").IsRequired();
+
+        e.HasOne(x => x.Ideia)
+            .WithMany(i => i.Comentarios)
+            .HasForeignKey(x => x.IdeiaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        e.HasOne(x => x.Usuario)
+            .WithMany()
+            .HasForeignKey(x => x.UsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        e.HasOne(x => x.Parent)
+            .WithMany(p => p.Replies)
+            .HasForeignKey(x => x.ParentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class IdaDocumentoMap : IEntityTypeConfiguration<IdaDocumento>
 {
     public void Configure(EntityTypeBuilder<IdaDocumento> e)
     {
-        e.ToTable("ida_documento", t => t.HasCheckConstraint("ck_ida_documento_pdf", "ida_documento_arquivo LIKE '%.pdf'"));
+        e.ToTable("ida_documento");
         e.HasKey(x => x.Id);
         e.Property(x => x.Id).HasColumnName("ida_documento_id").ValueGeneratedOnAdd();
         e.Property(x => x.IdeiaId).HasColumnName("ida_ideia_id").IsRequired();
-        e.Property(x => x.Arquivo).HasColumnName("ida_documento_arquivo").HasMaxLength(2000).IsRequired();
+        e.Property(x => x.Arquivo).HasColumnName("ida_documento_arquivo").HasMaxLength(1000).IsRequired();
 
         e.HasOne(x => x.Ideia)
             .WithMany(i => i.Documentos)
             .HasForeignKey(x => x.IdeiaId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class ChtConversaMap : IEntityTypeConfiguration<ChtConversa>
+{
+    public void Configure(EntityTypeBuilder<ChtConversa> e)
+    {
+        e.ToTable("cht_conversa");
+        e.HasKey(x => x.Id);
+        e.Property(x => x.Id).HasColumnName("cht_conversa_id").ValueGeneratedOnAdd();
+        e.Property(x => x.Usuario1Id).HasColumnName("cht_conversa_usuario1_id").IsRequired();
+        e.Property(x => x.Usuario2Id).HasColumnName("cht_conversa_usuario2_id").IsRequired();
+        e.Property(x => x.IdeiaId).HasColumnName("cht_conversa_ideia_id");
+        e.Property(x => x.CreateDate).HasColumnName("cht_conversa_create_date").IsRequired();
+        e.Property(x => x.UpdateDate).HasColumnName("cht_conversa_update_date").IsRequired();
+
+        e.HasOne(x => x.Usuario1)
+            .WithMany()
+            .HasForeignKey(x => x.Usuario1Id)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        e.HasOne(x => x.Usuario2)
+            .WithMany()
+            .HasForeignKey(x => x.Usuario2Id)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        e.HasOne(x => x.Ideia)
+            .WithMany()
+            .HasForeignKey(x => x.IdeiaId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+internal sealed class ChtMensagemMap : IEntityTypeConfiguration<ChtMensagem>
+{
+    public void Configure(EntityTypeBuilder<ChtMensagem> e)
+    {
+        e.ToTable("cht_mensagem");
+        e.HasKey(x => x.Id);
+        e.Property(x => x.Id).HasColumnName("cht_mensagem_id").ValueGeneratedOnAdd();
+        e.Property(x => x.ConversaId).HasColumnName("cht_mensagem_conversa_id").IsRequired();
+        e.Property(x => x.RemetenteId).HasColumnName("cht_mensagem_remetente_id").IsRequired();
+        e.Property(x => x.Texto).HasColumnName("cht_mensagem_texto").HasMaxLength(4000).IsRequired();
+        e.Property(x => x.Lida).HasColumnName("cht_mensagem_lida").IsRequired();
+        e.Property(x => x.CreateDate).HasColumnName("cht_mensagem_create_date").IsRequired();
+        e.Property(x => x.UpdateDate).HasColumnName("cht_mensagem_update_date").IsRequired();
+
+        e.HasOne(x => x.Conversa)
+            .WithMany(c => c.Mensagens)
+            .HasForeignKey(x => x.ConversaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        e.HasOne(x => x.Remetente)
+            .WithMany()
+            .HasForeignKey(x => x.RemetenteId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class PgtPagamentoMap : IEntityTypeConfiguration<PgtPagamento>
+{
+    public void Configure(EntityTypeBuilder<PgtPagamento> e)
+    {
+        e.ToTable("pgt_pagamento");
+        e.HasKey(x => x.Id);
+        e.Property(x => x.Id).HasColumnName("pgt_pagamento_id").ValueGeneratedOnAdd();
+        e.Property(x => x.UsuarioId).HasColumnName("usu_id").IsRequired();
+        e.Property(x => x.Valor).HasColumnName("pgt_pagamento_valor").HasPrecision(18, 2).IsRequired();
+        e.Property(x => x.Descricao).HasColumnName("pgt_pagamento_descricao").HasMaxLength(500).IsRequired();
+        e.Property(x => x.Metodo).HasColumnName("pgt_pagamento_metodo").HasMaxLength(100).IsRequired();
+        e.Property(x => x.Status).HasColumnName("pgt_pagamento_status").HasMaxLength(50).IsRequired();
+        e.Property(x => x.CreateDate).HasColumnName("pgt_pagamento_create_date").IsRequired();
+        e.Property(x => x.UpdateDate).HasColumnName("pgt_pagamento_update_date").IsRequired();
+
+        e.HasOne(x => x.Usuario)
+            .WithMany()
+            .HasForeignKey(x => x.UsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class GovDenunciaMap : IEntityTypeConfiguration<GovDenuncia>
+{
+    public void Configure(EntityTypeBuilder<GovDenuncia> e)
+    {
+        e.ToTable("gov_denuncia");
+        e.HasKey(x => x.Id);
+        e.Property(x => x.Id).HasColumnName("gov_denuncia_id").ValueGeneratedOnAdd();
+        e.Property(x => x.DenuncianteId).HasColumnName("denunciante_id").IsRequired();
+        e.Property(x => x.TipoAlvo).HasColumnName("gov_denuncia_tipo_alvo").HasMaxLength(50).IsRequired();
+        e.Property(x => x.AlvoId).HasColumnName("gov_denuncia_alvo_id").IsRequired();
+        e.Property(x => x.Motivo).HasColumnName("gov_denuncia_motivo").HasMaxLength(1000).IsRequired();
+        e.Property(x => x.Status).HasColumnName("gov_denuncia_status").HasMaxLength(50).IsRequired();
+        e.Property(x => x.ObservacaoAdm).HasColumnName("gov_denuncia_obs_adm").HasMaxLength(2000);
+        e.Property(x => x.CreateDate).HasColumnName("gov_denuncia_create_date").IsRequired();
+        e.Property(x => x.UpdateDate).HasColumnName("gov_denuncia_update_date").IsRequired();
+
+        e.HasOne(x => x.Denunciante)
+            .WithMany()
+            .HasForeignKey(x => x.DenuncianteId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -209,7 +377,8 @@ internal sealed class PrpAceiteMap : IEntityTypeConfiguration<PrpAceite>
         e.HasData(
             new PrpAceite { Id = 1, Nome = "aceita" },
             new PrpAceite { Id = 2, Nome = "recusada" },
-            new PrpAceite { Id = 3, Nome = "pendente" }
+            new PrpAceite { Id = 3, Nome = "pendente" },
+            new PrpAceite { Id = 4, Nome = "contraproposta" }
         );
     }
 }
@@ -224,6 +393,8 @@ internal sealed class PrpPropostaMap : IEntityTypeConfiguration<PrpProposta>
         e.Property(x => x.IdeiaId).HasColumnName("prp_ideia_id").IsRequired();
         e.Property(x => x.UsuarioId).HasColumnName("prp_usuario_id").IsRequired();
         e.Property(x => x.Status).HasColumnName("prp_status").IsRequired();
+        e.Property(x => x.CreateDate).HasColumnName("prp_create_date").IsRequired();
+        e.Property(x => x.UpdateDate).HasColumnName("prp_update_date").IsRequired();
 
         e.HasOne(x => x.Ideia)
             .WithMany(i => i.Propostas)
@@ -334,7 +505,9 @@ internal sealed class NtfTipoMap : IEntityTypeConfiguration<NtfTipo>
             new NtfTipo { Id = 1, Nome = "prp aceita" },
             new NtfTipo { Id = 2, Nome = "prp recusada" },
             new NtfTipo { Id = 3, Nome = "alerta" },
-            new NtfTipo { Id = 4, Nome = "n" }
+            new NtfTipo { Id = 4, Nome = "n" },
+            new NtfTipo { Id = 5, Nome = "prp recebida" },
+            new NtfTipo { Id = 6, Nome = "prp contraproposta" }
         );
     }
 }

@@ -17,6 +17,139 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
 
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.ChtConversa", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_conversa_id");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cht_conversa_create_date");
+
+                    b.Property<long?>("IdeiaId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_conversa_ideia_id");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cht_conversa_update_date");
+
+                    b.Property<long>("Usuario1Id")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_conversa_usuario1_id");
+
+                    b.Property<long>("Usuario2Id")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_conversa_usuario2_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdeiaId");
+
+                    b.HasIndex("Usuario1Id");
+
+                    b.HasIndex("Usuario2Id");
+
+                    b.ToTable("cht_conversa", (string)null);
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.ChtMensagem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_mensagem_id");
+
+                    b.Property<long>("ConversaId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_mensagem_conversa_id");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cht_mensagem_create_date");
+
+                    b.Property<bool>("Lida")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_mensagem_lida");
+
+                    b.Property<long>("RemetenteId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("cht_mensagem_remetente_id");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cht_mensagem_texto");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cht_mensagem_update_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversaId");
+
+                    b.HasIndex("RemetenteId");
+
+                    b.ToTable("cht_mensagem", (string)null);
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.GovDenuncia", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("gov_denuncia_id");
+
+                    b.Property<long>("AlvoId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("gov_denuncia_alvo_id");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("gov_denuncia_create_date");
+
+                    b.Property<long>("DenuncianteId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("denunciante_id");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("gov_denuncia_motivo");
+
+                    b.Property<string>("ObservacaoAdm")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("gov_denuncia_obs_adm");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("gov_denuncia_status");
+
+                    b.Property<string>("TipoAlvo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("gov_denuncia_tipo_alvo");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("gov_denuncia_update_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DenuncianteId");
+
+                    b.ToTable("gov_denuncia", (string)null);
+                });
+
             modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaCategoria", b =>
                 {
                     b.Property<int>("Id")
@@ -115,6 +248,50 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaComentario", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ida_comentario_id");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ida_comentario_create_date");
+
+                    b.Property<long>("IdeiaId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ida_comentario_ideia_id");
+
+                    b.Property<long?>("ParentId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ida_comentario_parent_id");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ida_comentario_texto");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ida_comentario_update_date");
+
+                    b.Property<long>("UsuarioId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ida_comentario_usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdeiaId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("ida_comentario", (string)null);
+                });
+
             modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaDocumento", b =>
                 {
                     b.Property<long>("Id")
@@ -124,7 +301,7 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Arquivo")
                         .IsRequired()
-                        .HasMaxLength(2000)
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT")
                         .HasColumnName("ida_documento_arquivo");
 
@@ -136,9 +313,49 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("IdeiaId");
 
-                    b.ToTable("ida_documento", null, t =>
+                    b.ToTable("ida_documento", (string)null);
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaEstagio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ida_estagio_id");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ida_estagio_nome");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
+
+                    b.ToTable("ida_estagio", (string)null);
+
+                    b.HasData(
+                        new
                         {
-                            t.HasCheckConstraint("ck_ida_documento_pdf", "ida_documento_arquivo LIKE '%.pdf'");
+                            Id = 1,
+                            Nome = "Ideação"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Nome = "MVP"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Nome = "Tração"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Nome = "Scale-up"
                         });
                 });
 
@@ -153,6 +370,16 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("ida_categoria_id");
 
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ida_create_date");
+
+                    b.Property<int>("EstagioId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1)
+                        .HasColumnName("ida_estagio_id");
+
                     b.Property<string>("MotivoStatus")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT")
@@ -164,9 +391,18 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("ida_nome");
 
+                    b.Property<string>("Regiao")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ida_regiao");
+
                     b.Property<int>("StatusId")
                         .HasColumnType("INTEGER")
                         .HasColumnName("ida_status_id");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ida_update_date");
 
                     b.Property<long>("UsuarioId")
                         .HasColumnType("INTEGER")
@@ -176,6 +412,9 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoriaId")
                         .HasDatabaseName("ix_ida_ideia_ida_categoria_id");
+
+                    b.HasIndex("EstagioId")
+                        .HasDatabaseName("ix_ida_ideia_ida_estagio_id");
 
                     b.HasIndex("Nome")
                         .IsUnique();
@@ -231,6 +470,13 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("TEXT")
                         .HasColumnName("ida_info_update_date");
+
+                    b.Property<decimal>("ValorCaptacao")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("ida_info_valor_captacao");
 
                     b.HasKey("Id");
 
@@ -359,7 +605,66 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         {
                             Id = 4,
                             Nome = "n"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Nome = "prp recebida"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Nome = "prp contraproposta"
                         });
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.PgtPagamento", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("pgt_pagamento_id");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("pgt_pagamento_create_date");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("pgt_pagamento_descricao");
+
+                    b.Property<string>("Metodo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("pgt_pagamento_metodo");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("pgt_pagamento_status");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("pgt_pagamento_update_date");
+
+                    b.Property<long>("UsuarioId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("usu_id");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("pgt_pagamento_valor");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("pgt_pagamento", (string)null);
                 });
 
             modelBuilder.Entity("TccSharkTank.Domain.Entities.PrpAceite", b =>
@@ -397,6 +702,11 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         {
                             Id = 3,
                             Nome = "pendente"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Nome = "contraproposta"
                         });
                 });
 
@@ -459,6 +769,10 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("prp_id");
 
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("prp_create_date");
+
                     b.Property<long>("IdeiaId")
                         .HasColumnType("INTEGER")
                         .HasColumnName("prp_ideia_id");
@@ -466,6 +780,10 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                     b.Property<bool>("Status")
                         .HasColumnType("INTEGER")
                         .HasColumnName("prp_status");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("prp_update_date");
 
                     b.Property<long>("UsuarioId")
                         .HasColumnType("INTEGER")
@@ -632,10 +950,43 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("usu_perfil_descricao");
 
-                    b.Property<string>("LinkRedes")
+                    b.Property<string>("InvestInteresses")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT")
+                        .HasColumnName("usu_perfil_invest_interesses");
+
+                    b.Property<decimal?>("InvestTicketMax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("usu_perfil_invest_ticket_max");
+
+                    b.Property<decimal?>("InvestTicketMin")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("usu_perfil_invest_ticket_min");
+
+                    b.Property<string>("LinkRedes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
                         .HasColumnName("usu_perfil_link_redes");
+
+                    b.Property<bool>("ReceberEmailAlertas")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true)
+                        .HasColumnName("usu_perfil_email_alertas");
+
+                    b.Property<bool>("ReceberEmailMensagens")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true)
+                        .HasColumnName("usu_perfil_email_mensagens");
+
+                    b.Property<bool>("ReceberEmailPropostas")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true)
+                        .HasColumnName("usu_perfil_email_propostas");
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("TEXT")
@@ -726,6 +1077,88 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                     b.ToTable("usu_usuario", (string)null);
                 });
 
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.ChtConversa", b =>
+                {
+                    b.HasOne("TccSharkTank.Domain.Entities.IdaIdeia", "Ideia")
+                        .WithMany()
+                        .HasForeignKey("IdeiaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TccSharkTank.Domain.Entities.UsuUsuario", "Usuario1")
+                        .WithMany()
+                        .HasForeignKey("Usuario1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TccSharkTank.Domain.Entities.UsuUsuario", "Usuario2")
+                        .WithMany()
+                        .HasForeignKey("Usuario2Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Ideia");
+
+                    b.Navigation("Usuario1");
+
+                    b.Navigation("Usuario2");
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.ChtMensagem", b =>
+                {
+                    b.HasOne("TccSharkTank.Domain.Entities.ChtConversa", "Conversa")
+                        .WithMany("Mensagens")
+                        .HasForeignKey("ConversaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TccSharkTank.Domain.Entities.UsuUsuario", "Remetente")
+                        .WithMany()
+                        .HasForeignKey("RemetenteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversa");
+
+                    b.Navigation("Remetente");
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.GovDenuncia", b =>
+                {
+                    b.HasOne("TccSharkTank.Domain.Entities.UsuUsuario", "Denunciante")
+                        .WithMany()
+                        .HasForeignKey("DenuncianteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Denunciante");
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaComentario", b =>
+                {
+                    b.HasOne("TccSharkTank.Domain.Entities.IdaIdeia", "Ideia")
+                        .WithMany("Comentarios")
+                        .HasForeignKey("IdeiaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TccSharkTank.Domain.Entities.IdaComentario", "Parent")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("TccSharkTank.Domain.Entities.UsuUsuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Ideia");
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaDocumento", b =>
                 {
                     b.HasOne("TccSharkTank.Domain.Entities.IdaIdeia", "Ideia")
@@ -745,6 +1178,12 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("TccSharkTank.Domain.Entities.IdaEstagio", "Estagio")
+                        .WithMany("Ideias")
+                        .HasForeignKey("EstagioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TccSharkTank.Domain.Entities.IdaStatus", "Status")
                         .WithMany("Ideias")
                         .HasForeignKey("StatusId")
@@ -758,6 +1197,8 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Categoria");
+
+                    b.Navigation("Estagio");
 
                     b.Navigation("Status");
 
@@ -790,6 +1231,17 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Tipo");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.PgtPagamento", b =>
+                {
+                    b.HasOne("TccSharkTank.Domain.Entities.UsuUsuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Usuario");
                 });
@@ -886,13 +1338,30 @@ namespace TccSharkTank.Infrastructure.Persistence.Migrations
                     b.Navigation("Cargo");
                 });
 
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.ChtConversa", b =>
+                {
+                    b.Navigation("Mensagens");
+                });
+
             modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaCategoria", b =>
+                {
+                    b.Navigation("Ideias");
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaComentario", b =>
+                {
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaEstagio", b =>
                 {
                     b.Navigation("Ideias");
                 });
 
             modelBuilder.Entity("TccSharkTank.Domain.Entities.IdaIdeia", b =>
                 {
+                    b.Navigation("Comentarios");
+
                     b.Navigation("Documentos");
 
                     b.Navigation("Info");

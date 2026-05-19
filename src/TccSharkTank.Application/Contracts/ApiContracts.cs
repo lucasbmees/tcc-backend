@@ -27,7 +27,13 @@ public sealed record UpdatePerfilRequest(
     string? Descricao,
     string? Cep,
     DateTime? DataNasc,
-    string? LinkRedes
+    string? LinkRedes,
+    decimal? InvestTicketMin,
+    decimal? InvestTicketMax,
+    string? InvestInteresses,
+    bool? ReceberEmailPropostas,
+    bool? ReceberEmailMensagens,
+    bool? ReceberEmailAlertas
 );
 
 public sealed record UserDetailsResponse(
@@ -48,41 +54,97 @@ public sealed record PerfilResponse(
     string? Cep,
     DateTime? DataNasc,
     string? LinkRedes,
+    decimal? InvestTicketMin,
+    decimal? InvestTicketMax,
+    string? InvestInteresses,
+    bool ReceberEmailPropostas,
+    bool ReceberEmailMensagens,
+    bool ReceberEmailAlertas,
     DateTime CreateDate,
     DateTime UpdateDate
 );
 
 public sealed record CreateIdeiaRequest(
     int CategoriaId,
+    int EstagioId,
     string Nome,
+    string? Regiao,
     string Cnpj,
     string? Descricao,
     string? LinkVideo,
     string? Imagem,
-    decimal Fatia
+    decimal Fatia,
+    decimal ValorCaptacao
 );
 
 public sealed record UpdateIdeiaRequest(
     int? CategoriaId,
+    int? EstagioId,
     string? Nome,
+    string? Regiao,
     string? Cnpj,
     string? Descricao,
     string? LinkVideo,
     string? Imagem,
-    decimal? Fatia
+    decimal? Fatia,
+    decimal? ValorCaptacao
 );
 
 public sealed record IdeiaDetailsResponse(
     long IdaId,
     long IdaUsuarioId,
     string IdaNome,
+    string? Regiao,
     int IdaCategoriaId,
     string CategoriaNome,
+    int IdaEstagioId,
+    string EstagioNome,
     int IdaStatusId,
     string StatusNome,
     string? IdaMotivoStatus,
     IdeiaInfoResponse? Info,
-    List<IdeiaDocumentoResponse> Documentos
+    List<IdeiaDocumentoResponse> Documentos,
+    List<ComentarioResponse> Comentarios
+);
+
+public sealed record ComentarioResponse(
+    long Id,
+    long UsuarioId,
+    string UsuarioNome,
+    long? ParentId,
+    string Texto,
+    DateTime CreateDate,
+    List<ComentarioResponse> Replies
+);
+
+public sealed record CreateComentarioRequest(
+    string Texto,
+    long? ParentId = null
+);
+
+public sealed record ConversaResponse(
+    long Id,
+    long OutroUsuarioId,
+    string OutroUsuarioNome,
+    long? IdeiaId,
+    string? IdeiaNome,
+    DateTime UpdateDate,
+    MensagemResponse? UltimaMensagem
+);
+
+public sealed record MensagemResponse(
+    long Id,
+    long RemetenteId,
+    string RemetenteNome,
+    string Texto,
+    bool Lida,
+    DateTime CreateDate
+);
+
+public sealed record CreateMensagemRequest(
+    long? ParaUsuarioId, // Usado para iniciar conversa
+    long? IdeiaId,       // Opcional: contexto da conversa
+    string Texto
 );
 
 public sealed record IdeiaInfoResponse(
@@ -91,6 +153,7 @@ public sealed record IdeiaInfoResponse(
     string? IdaInfoLinkVideo,
     string? IdaInfoImagem,
     decimal IdaInfoFatia,
+    decimal IdaInfoValorCaptacao,
     DateTime CreateDate,
     DateTime UpdateDate
 );

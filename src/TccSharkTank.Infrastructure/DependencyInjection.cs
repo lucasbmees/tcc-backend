@@ -27,12 +27,16 @@ public static class DependencyInjection
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<ICargoRepository, CargoRepository>();
         services.AddScoped<IIdeiaRepository, IdeiaRepository>();
-        services.AddScoped<IPropostaRepository, PropostaRepository>();
+        services.AddScoped<IPropostaRepository, EfPropostaRepository>();
+        services.AddScoped<IChatRepository, EfChatRepository>();
+        services.AddScoped<IPagamentoRepository, EfPagamentoRepository>();
+        services.AddScoped<IGovernancaRepository, EfGovernancaRepository>();
         services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
         services.AddScoped<ILogRepository, LogRepository>();
         services.AddScoped<ILookupRepository, LookupRepository>();
 
         services.AddScoped<IClock, SystemClock>();
+        services.AddScoped<IEmailService, SimuladoEmailService>();
         services.AddScoped<IFileStorage, LocalFileStorage>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -42,6 +46,11 @@ public static class DependencyInjection
         services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<IIdeiaService, IdeiaService>();
         services.AddScoped<IPropostaService, PropostaService>();
+        services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IJuridicoService, JuridicoService>();
+        services.AddScoped<IPagamentoService, PagamentoService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IGovernancaService, GovernancaService>();
         services.AddScoped<INotificacaoService, NotificacaoService>();
 
         return services;
