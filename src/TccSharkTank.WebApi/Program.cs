@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using TccSharkTank.Application.Abstractions.Security;
@@ -76,7 +77,7 @@ using (var scope = app.Services.CreateScope())
     {
         // Substitua 'AppDbContext' pelo nome exato da sua classe de contexto se for diferente
         var context = services.GetRequiredService<TccSharkTank.Infrastructure.Persistence.AppDbContext>();
-        context.Database.EnsureCreated();
+        context.Database.Migrate();
     }
     catch (Exception ex)
     {

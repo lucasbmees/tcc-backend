@@ -12,11 +12,13 @@ public sealed class IdeiasController : ControllerBase
 {
     private readonly IIdeiaService _ideias;
     private readonly ICurrentUser _currentUser;
+    private readonly IRelatorioService _relatorios;
 
-    public IdeiasController(IIdeiaService ideias, ICurrentUser currentUser)
+    public IdeiasController(IIdeiaService ideias, ICurrentUser currentUser, IRelatorioService relatorios)
     {
         _ideias = ideias;
         _currentUser = currentUser;
+        _relatorios = relatorios;
     }
 
     [Authorize(Roles = "empreendedor")]
@@ -36,8 +38,35 @@ public sealed class IdeiasController : ControllerBase
         [FromQuery] string? regiao,
         [FromQuery] decimal? valorMin,
         [FromQuery] decimal? valorMax,
+        [FromQuery] bool? apenasComDocumentos,
         CancellationToken cancellationToken)
-        => _ideias.ListarAsync(termo, categoriaId, estagioId, regiao, valorMin, valorMax, cancellationToken);
+    {
+        if (apenasComDocumentos == true)
+        {
+            var role = (_currentUser.Role ?? string.Empty).ToLowerInvariant();
+            var plan = (User.FindFirst("plan")?.Value ?? string.Empty).ToLowerInvariant();
+            if (role != "adm" && (role != "investidor" || plan != "elite"))
+                throw new TccSharkTank.Application.Common.AppException("Filtro disponível apenas para investidores Elite.", 403);
+        }
+
+        return _ideias.ListarAsync(termo, categoriaId, estagioId, regiao, valorMin, valorMax, apenasComDocumentos, cancellationToken);
+    }
+
+    [Authorize]
+    [HttpGet("{id:long}/relatorio")]
+    public async Task<IActionResult> Relatorio([FromRoute] long id, CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId ?? throw new TccSharkTank.Application.Common.AppException("Não autenticado.", 401);
+        var role = (_currentUser.Role ?? string.Empty).ToLowerInvariant();
+        var plan = (User.FindFirst("plan")?.Value ?? string.Empty).ToLowerInvariant();
+
+        if (role != "adm" && (role != "investidor" || plan != "elite"))
+            throw new TccSharkTank.Application.Common.AppException("Recurso disponível apenas para investidores Elite.", 403);
+
+        var conteudo = await _relatorios.GerarRelatorioIdeiaAsync(id, cancellationToken);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(conteudo);
+        return File(bytes, "text/markdown", $"Relatorio-Ideia-{id}.md");
+    }
 
     [AllowAnonymous]
     [HttpGet("{id:long}")]

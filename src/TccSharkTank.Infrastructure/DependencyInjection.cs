@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IJuridicoService, JuridicoService>();
         services.AddScoped<IPagamentoService, PagamentoService>();
+        services.AddScoped<IPlanoService, PlanoService>();
+        services.AddScoped<IRelatorioService, RelatorioService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IGovernancaService, GovernancaService>();
         services.AddScoped<INotificacaoService, NotificacaoService>();
@@ -56,4 +58,3 @@ public static class DependencyInjection
         return services;
     }
 }
-

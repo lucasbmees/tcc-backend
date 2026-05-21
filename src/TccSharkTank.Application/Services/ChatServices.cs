@@ -17,6 +17,7 @@ public sealed class ChatService : IChatService
 {
     private readonly IChatRepository _chat;
     private readonly IUsuarioRepository _usuarios;
+    private readonly IPropostaRepository _propostas;
     private readonly IUnitOfWork _uow;
     private readonly IClock _clock;
     private readonly INotificacaoService _notificacoes;
@@ -24,12 +25,14 @@ public sealed class ChatService : IChatService
     public ChatService(
         IChatRepository chat,
         IUsuarioRepository usuarios,
+        IPropostaRepository propostas,
         IUnitOfWork uow,
         IClock clock,
         INotificacaoService notificacoes)
     {
         _chat = chat;
         _usuarios = usuarios;
+        _propostas = propostas;
         _uow = uow;
         _clock = clock;
         _notificacoes = notificacoes;
@@ -38,7 +41,19 @@ public sealed class ChatService : IChatService
     public async Task<List<ConversaResponse>> ListarMinhasConversasAsync(long usuarioId, CancellationToken cancellationToken)
     {
         var conversas = await _chat.ListMinhasConversasAsync(usuarioId, cancellationToken);
-        return conversas.Select(c => MapConversa(c, usuarioId)).ToList();
+        var permitidas = new List<ChtConversa>();
+
+        foreach (var c in conversas)
+        {
+            if (!c.IdeiaId.HasValue) continue;
+            var outroId = c.Usuario1Id == usuarioId ? c.Usuario2Id : c.Usuario1Id;
+            if (await _propostas.HasPropostaAceitaEntreUsuariosAsync(usuarioId, outroId, c.IdeiaId.Value, cancellationToken))
+            {
+                permitidas.Add(c);
+            }
+        }
+
+        return permitidas.Select(c => MapConversa(c, usuarioId)).ToList();
     }
 
     public async Task<List<MensagemResponse>> ListarMensagensAsync(long conversaId, long usuarioId, CancellationToken cancellationToken)
@@ -47,6 +62,17 @@ public sealed class ChatService : IChatService
         if (conversa is null || (conversa.Usuario1Id != usuarioId && conversa.Usuario2Id != usuarioId))
         {
             throw new AppException("Conversa não encontrada.", 404);
+        }
+
+        if (!conversa.IdeiaId.HasValue)
+        {
+            throw new AppException("Conversa só é permitida após uma proposta aceita.", 403);
+        }
+
+        var outroId = conversa.Usuario1Id == usuarioId ? conversa.Usuario2Id : conversa.Usuario1Id;
+        if (!await _propostas.HasPropostaAceitaEntreUsuariosAsync(usuarioId, outroId, conversa.IdeiaId.Value, cancellationToken))
+        {
+            throw new AppException("Conversa só é permitida após uma proposta aceita.", 403);
         }
 
         var mensagens = await _chat.GetMensagensByConversaIdAsync(conversaId, cancellationToken);
@@ -65,6 +91,8 @@ public sealed class ChatService : IChatService
     public async Task<MensagemResponse> EnviarMensagemAsync(long usuarioId, long? conversaId, CreateMensagemRequest request, CancellationToken cancellationToken)
     {
         ChtConversa? conversa;
+        long outroUsuarioId;
+        long ideiaId;
 
         if (conversaId.HasValue)
         {
@@ -73,11 +101,32 @@ public sealed class ChatService : IChatService
             {
                 throw new AppException("Conversa não encontrada.", 404);
             }
+
+            if (!conversa.IdeiaId.HasValue)
+            {
+                throw new AppException("Conversa só é permitida após uma proposta aceita.", 403);
+            }
+
+            outroUsuarioId = conversa.Usuario1Id == usuarioId ? conversa.Usuario2Id : conversa.Usuario1Id;
+            ideiaId = conversa.IdeiaId.Value;
         }
         else if (request.ParaUsuarioId.HasValue)
         {
             if (usuarioId == request.ParaUsuarioId.Value)
                 throw new AppException("Você não pode conversar consigo mesmo.", 400);
+
+            if (!request.IdeiaId.HasValue)
+            {
+                throw new AppException("Conversa só é permitida após uma proposta aceita.", 403);
+            }
+
+            outroUsuarioId = request.ParaUsuarioId.Value;
+            ideiaId = request.IdeiaId.Value;
+
+            if (!await _propostas.HasPropostaAceitaEntreUsuariosAsync(usuarioId, outroUsuarioId, ideiaId, cancellationToken))
+            {
+                throw new AppException("Conversa só é permitida após uma proposta aceita.", 403);
+            }
 
             // Tenta achar conversa existente
             conversa = await _chat.GetConversaEntreUsuariosAsync(usuarioId, request.ParaUsuarioId.Value, request.IdeiaId, cancellationToken);
@@ -99,6 +148,11 @@ public sealed class ChatService : IChatService
         else
         {
             throw new AppException("Informe a conversa ou o destinatário.", 400);
+        }
+
+        if (!await _propostas.HasPropostaAceitaEntreUsuariosAsync(usuarioId, outroUsuarioId, ideiaId, cancellationToken))
+        {
+            throw new AppException("Conversa só é permitida após uma proposta aceita.", 403);
         }
 
         var mensagem = new ChtMensagem

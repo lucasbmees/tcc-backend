@@ -35,8 +35,10 @@ public interface IIdeiaRepository
         string? regiao,
         decimal? valorMin,
         decimal? valorMax,
+        bool? apenasComDocumentos,
         CancellationToken cancellationToken);
     Task<int> CountAsync(CancellationToken cancellationToken);
+    Task<int> CountAtivasByUsuarioAsync(long usuarioId, CancellationToken cancellationToken);
     Task AddAsync(IdaIdeia ideia, CancellationToken cancellationToken);
     void Update(IdaIdeia ideia);
     Task AddComentarioAsync(IdaComentario comentario, CancellationToken cancellationToken);
@@ -63,6 +65,7 @@ public interface IPropostaRepository
     void Update(PrpProposta proposta);
     Task<List<PrpProposta>> ListByIdeiaAsync(long ideiaId, CancellationToken cancellationToken);
     Task<List<PrpProposta>> ListTodasAsync(CancellationToken cancellationToken);
+    Task<bool> HasPropostaAceitaEntreUsuariosAsync(long usuarioAId, long usuarioBId, long ideiaId, CancellationToken cancellationToken);
 }
 
 public interface INotificacaoRepository

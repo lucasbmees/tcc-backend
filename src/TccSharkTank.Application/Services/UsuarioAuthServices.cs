@@ -11,6 +11,8 @@ public interface IAuthService
 {
     Task<AuthResponse> RegisterAsync(RegisterUserRequest request, CancellationToken cancellationToken);
     Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken);
+    Task<RecuperarSenhaResponse> RecuperarSenhaAsync(RecuperarSenhaRequest request, CancellationToken cancellationToken);
+    Task<MensagemResponseSimples> RedefinirSenhaAsync(RedefinirSenhaRequest request, CancellationToken cancellationToken);
 }
 
 public interface IUsuarioService
@@ -23,6 +25,9 @@ public interface IUsuarioService
 
 public sealed class AuthService : IAuthService
 {
+    private static readonly object ResetLock = new();
+    private static readonly Dictionary<string, (long UsuarioId, DateTime ExpiresAt)> ResetTokens = new();
+
     private readonly IUsuarioRepository _usuarios;
     private readonly ICargoRepository _cargos;
     private readonly IUnitOfWork _uow;
@@ -30,6 +35,7 @@ public sealed class AuthService : IAuthService
     private readonly IJwtTokenService _jwt;
     private readonly IClock _clock;
     private readonly ILogService _logs;
+    private readonly IEmailService _email;
 
     public AuthService(
         IUsuarioRepository usuarios,
@@ -38,7 +44,8 @@ public sealed class AuthService : IAuthService
         IPasswordHasher passwordHasher,
         IJwtTokenService jwt,
         IClock clock,
-        ILogService logs)
+        ILogService logs,
+        IEmailService email)
     {
         _usuarios = usuarios;
         _cargos = cargos;
@@ -47,6 +54,7 @@ public sealed class AuthService : IAuthService
         _jwt = jwt;
         _clock = clock;
         _logs = logs;
+        _email = email;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterUserRequest request, CancellationToken cancellationToken)
@@ -118,6 +126,108 @@ public sealed class AuthService : IAuthService
 
         var token = _jwt.GenerateToken(usuario);
         return new AuthResponse(usuario.Id, usuario.Cargo?.Nome ?? usuario.CargoId.ToString(), token);
+    }
+
+    public async Task<RecuperarSenhaResponse> RecuperarSenhaAsync(RecuperarSenhaRequest request, CancellationToken cancellationToken)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new AppException("E-mail inválido.", 400);
+        }
+
+        var usuario = await _usuarios.GetByEmailAsync(email, cancellationToken);
+
+        var mensagem = "Se o e-mail estiver cadastrado, enviaremos instruções para redefinição.";
+        if (usuario is null || !usuario.Status)
+        {
+            return new RecuperarSenhaResponse(mensagem, null);
+        }
+
+        var token = Guid.NewGuid().ToString("N");
+        var expiresAt = _clock.UtcNow.AddMinutes(30);
+
+        lock (ResetLock)
+        {
+            LimparTokensExpiradosUnsafe();
+            ResetTokens[token] = (usuario.Id, expiresAt);
+        }
+
+        await _email.EnviarAsync(
+            para: usuario.Email,
+            assunto: "Recuperação de senha",
+            corpo: $"Use este token para redefinir sua senha: {token}\n\nEste token expira em 30 minutos.",
+            cancellationToken: cancellationToken);
+
+        await _logs.RegistrarAsync(
+            tipoNome: "recuperação senha",
+            usuarioId: usuario.Id,
+            ideiaId: null,
+            propostaId: null,
+            descricao: $"Solicitação de recuperação de senha para {usuario.Email}",
+            cancellationToken: cancellationToken);
+
+        await _uow.SaveChangesAsync(cancellationToken);
+
+        return new RecuperarSenhaResponse(mensagem, token);
+    }
+
+    public async Task<MensagemResponseSimples> RedefinirSenhaAsync(RedefinirSenhaRequest request, CancellationToken cancellationToken)
+    {
+        var token = request.Token.Trim();
+        var novaSenha = request.NovaSenha;
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new AppException("Token inválido.", 400);
+        }
+
+        if (string.IsNullOrWhiteSpace(novaSenha) || novaSenha.Trim().Length < 6)
+        {
+            throw new AppException("A nova senha deve ter ao menos 6 caracteres.", 400);
+        }
+
+        long usuarioId;
+        lock (ResetLock)
+        {
+            LimparTokensExpiradosUnsafe();
+            if (!ResetTokens.TryGetValue(token, out var item))
+            {
+                throw new AppException("Token inválido ou expirado.", 400);
+            }
+
+            usuarioId = item.UsuarioId;
+            ResetTokens.Remove(token);
+        }
+
+        var usuario = await _usuarios.GetByIdAsync(usuarioId, cancellationToken);
+        if (usuario is null || !usuario.Status)
+        {
+            throw new AppException("Usuário não encontrado.", 404);
+        }
+
+        usuario.Senha = _passwordHasher.Hash(novaSenha);
+        _usuarios.Update(usuario);
+
+        await _logs.RegistrarAsync(
+            tipoNome: "redefinição senha",
+            usuarioId: usuario.Id,
+            ideiaId: null,
+            propostaId: null,
+            descricao: $"Senha redefinida para {usuario.Email}",
+            cancellationToken: cancellationToken);
+
+        await _uow.SaveChangesAsync(cancellationToken);
+
+        return new MensagemResponseSimples("Senha redefinida com sucesso.");
+    }
+
+    private static void LimparTokensExpiradosUnsafe()
+    {
+        var agora = DateTime.UtcNow;
+        var expirados = ResetTokens.Where(kv => kv.Value.ExpiresAt <= agora).Select(kv => kv.Key).ToList();
+        foreach (var key in expirados) ResetTokens.Remove(key);
     }
 }
 

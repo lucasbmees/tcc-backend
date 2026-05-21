@@ -22,6 +22,24 @@ internal sealed class UsuCargoMap : IEntityTypeConfiguration<UsuCargo>
     }
 }
 
+internal sealed class UsuPlanoMap : IEntityTypeConfiguration<UsuPlano>
+{
+    public void Configure(EntityTypeBuilder<UsuPlano> e)
+    {
+        e.ToTable("usu_plano");
+        e.HasKey(x => x.Id);
+        e.Property(x => x.Id).HasColumnName("usu_plano_id").ValueGeneratedOnAdd();
+        e.Property(x => x.Nome).HasColumnName("usu_plano_nome").HasMaxLength(50).IsRequired();
+        e.HasIndex(x => x.Nome).IsUnique();
+
+        e.HasData(
+            new UsuPlano { Id = 1, Nome = "basico" },
+            new UsuPlano { Id = 2, Nome = "pro" },
+            new UsuPlano { Id = 3, Nome = "elite" }
+        );
+    }
+}
+
 internal sealed class UsuUsuarioMap : IEntityTypeConfiguration<UsuUsuario>
 {
     public void Configure(EntityTypeBuilder<UsuUsuario> e)
@@ -34,6 +52,7 @@ internal sealed class UsuUsuarioMap : IEntityTypeConfiguration<UsuUsuario>
         e.Property(x => x.Telefone).HasColumnName("usu_telefone").HasMaxLength(30).IsRequired();
         e.Property(x => x.Senha).HasColumnName("usu_senha").HasMaxLength(500).IsRequired();
         e.Property(x => x.CargoId).HasColumnName("usu_cargo_id").IsRequired();
+        e.Property(x => x.PlanoId).HasColumnName("usu_plano_id").HasDefaultValue(1).IsRequired();
         e.Property(x => x.Status).HasColumnName("usu_status").IsRequired();
         e.Property(x => x.UltimoLogin).HasColumnName("usu_ultimo_login");
         e.Property(x => x.Nome).HasColumnName("usu_nome").HasMaxLength(100).IsRequired();
@@ -46,6 +65,11 @@ internal sealed class UsuUsuarioMap : IEntityTypeConfiguration<UsuUsuario>
         e.HasOne(x => x.Cargo)
             .WithMany(c => c.Usuarios)
             .HasForeignKey(x => x.CargoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        e.HasOne(x => x.Plano)
+            .WithMany(p => p.Usuarios)
+            .HasForeignKey(x => x.PlanoId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
