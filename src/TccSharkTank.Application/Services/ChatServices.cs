@@ -143,6 +143,7 @@ public sealed class ChatService : IChatService
                     UpdateDate = _clock.UtcNow
                 };
                 await _chat.AddConversaAsync(conversa, cancellationToken);
+                await _uow.SaveChangesAsync(cancellationToken);
             }
         }
         else
