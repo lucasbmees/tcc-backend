@@ -82,7 +82,23 @@ public sealed class PropostasController : ControllerBase
     [HttpGet("propostas/{propostaId:long}/contrato")]
     public async Task<IActionResult> DownloadContrato([FromRoute] long propostaId, [FromServices] IJuridicoService juridico, CancellationToken cancellationToken)
     {
-        var conteudo = await juridico.GerarTermoInvestimentoAsync(propostaId, cancellationToken);
+        var userId = _currentUser.UserId ?? throw new TccSharkTank.Application.Common.AppException("Não autenticado.", 401);
+        var role = (_currentUser.Role ?? string.Empty).ToLowerInvariant();
+        var plan = (User.FindFirst("plan")?.Value ?? string.Empty).ToLowerInvariant();
+
+        if (role != "adm")
+        {
+            if (role == "investidor" && plan != "elite")
+                throw new TccSharkTank.Application.Common.AppException("Recurso disponível apenas no plano Elite.", 403);
+
+            if (role == "empreendedor" && plan != "pro")
+                throw new TccSharkTank.Application.Common.AppException("Recurso disponível apenas no plano Pro.", 403);
+
+            if (role != "investidor" && role != "empreendedor")
+                throw new TccSharkTank.Application.Common.AppException("Acesso negado.", 403);
+        }
+
+        var conteudo = await juridico.GerarTermoInvestimentoAsync(propostaId, userId, cancellationToken);
         var bytes = System.Text.Encoding.UTF8.GetBytes(conteudo);
         return File(bytes, "text/markdown", $"Contrato-Investimento-{propostaId}.md");
     }

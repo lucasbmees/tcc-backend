@@ -11,6 +11,7 @@ public sealed class AppDbContext : DbContext
 
     public DbSet<UsuUsuario> UsuUsuarios => Set<UsuUsuario>();
     public DbSet<UsuCargo> UsuCargos => Set<UsuCargo>();
+    public DbSet<UsuPlano> UsuPlanos => Set<UsuPlano>();
     public DbSet<UsuPerfil> UsuPerfis => Set<UsuPerfil>();
 
     public DbSet<IdaIdeia> IdaIdeias => Set<IdaIdeia>();

@@ -7,7 +7,7 @@ namespace TccSharkTank.Application.Services;
 
 public interface IJuridicoService
 {
-    Task<string> GerarTermoInvestimentoAsync(long propostaId, CancellationToken cancellationToken);
+    Task<string> GerarTermoInvestimentoAsync(long propostaId, long usuarioId, CancellationToken cancellationToken);
 }
 
 public sealed class JuridicoService : IJuridicoService
@@ -26,16 +26,27 @@ public sealed class JuridicoService : IJuridicoService
         _usuarios = usuarios;
     }
 
-    public async Task<string> GerarTermoInvestimentoAsync(long propostaId, CancellationToken cancellationToken)
+    public async Task<string> GerarTermoInvestimentoAsync(long propostaId, long usuarioId, CancellationToken cancellationToken)
     {
         var proposta = await _propostas.GetByIdAsync(propostaId, cancellationToken);
         if (proposta is null) throw new AppException("Proposta não encontrada.", 404);
 
         var ideia = await _ideias.GetByIdAsync(proposta.IdeiaId, cancellationToken);
-        var investidor = await _usuarios.GetByIdAsync(proposta.UsuarioId, cancellationToken);
-        var empreendedor = await _usuarios.GetByIdAsync(ideia!.UsuarioId, cancellationToken);
+        if (ideia is null) throw new AppException("Ideia não encontrada.", 404);
 
-        var info = proposta.Infos.OrderByDescending(i => i.CreateDate).FirstOrDefault();
+        var ultima = proposta.Infos.OrderByDescending(i => i.CreateDate).FirstOrDefault();
+        if (ultima?.AceiteId != 1)
+        {
+            throw new AppException("Contrato disponível apenas após a proposta ser aceita.", 403);
+        }
+
+        if (usuarioId != proposta.UsuarioId && usuarioId != ideia.UsuarioId)
+        {
+            throw new AppException("Sem permissão para acessar este contrato.", 403);
+        }
+
+        var investidor = await _usuarios.GetByIdAsync(proposta.UsuarioId, cancellationToken);
+        var empreendedor = await _usuarios.GetByIdAsync(ideia.UsuarioId, cancellationToken);
         
         // Simulação de um contrato jurídico básico
         return $@"
@@ -49,7 +60,7 @@ Pelo presente instrumento particular, as partes abaixo qualificadas:
 
 Resolvem celebrar este Termo de Compromisso de Investimento, mediante as seguintes cláusulas:
 
-1. **OBJETO:** O Investidor compromete-se a aportar o valor de {info?.Valor:C2} na Startup, em troca de uma participação societária de {info?.FatiaPret:P2} (Equity).
+1. **OBJETO:** O Investidor compromete-se a aportar o valor de {ultima?.Valor:C2} na Startup, em troca de uma participação societária de {ultima?.FatiaPret:P2} (Equity).
 2. **CONDIÇÕES:** O aporte será realizado após a formalização final dos documentos societários, no prazo de 30 dias.
 3. **VALIDADE:** Este termo passa a valer a partir do aceite digital realizado na plataforma TCC Shark Tank em {proposta.UpdateDate:dd/MM/yyyy HH:mm}.
 

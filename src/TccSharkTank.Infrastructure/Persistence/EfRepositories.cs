@@ -29,6 +29,7 @@ public sealed class UsuarioRepository : IUsuarioRepository
     {
         return _db.UsuUsuarios
             .Include(u => u.Cargo)
+            .Include(u => u.Plano)
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Id == usuId, cancellationToken);
     }
@@ -37,6 +38,7 @@ public sealed class UsuarioRepository : IUsuarioRepository
     {
         return _db.UsuUsuarios
             .Include(u => u.Cargo)
+            .Include(u => u.Plano)
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
@@ -45,6 +47,7 @@ public sealed class UsuarioRepository : IUsuarioRepository
     {
         return _db.UsuUsuarios
             .Include(u => u.Cargo)
+            .Include(u => u.Plano)
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Cpf == cpf, cancellationToken);
     }
@@ -53,6 +56,7 @@ public sealed class UsuarioRepository : IUsuarioRepository
     {
         return _db.UsuUsuarios
             .Include(u => u.Cargo)
+            .Include(u => u.Plano)
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Telefone == telefone, cancellationToken);
     }
@@ -61,6 +65,7 @@ public sealed class UsuarioRepository : IUsuarioRepository
     {
         return _db.UsuUsuarios
             .Include(u => u.Cargo)
+            .Include(u => u.Plano)
             .Include(u => u.Perfil)
             .OrderBy(u => u.Id)
             .ToListAsync(cancellationToken);
@@ -105,6 +110,7 @@ public sealed class IdeiaRepository : IIdeiaRepository
             .Include(i => i.Status)
             .Include(i => i.Categoria)
             .Include(i => i.Estagio)
+            .Include(i => i.Usuario).ThenInclude(u => u!.Plano)
             .Include(i => i.Info)
             .Include(i => i.Documentos)
             .FirstOrDefaultAsync(i => i.Id == idaId, cancellationToken);
@@ -117,12 +123,14 @@ public sealed class IdeiaRepository : IIdeiaRepository
         string? regiao,
         decimal? valorMin,
         decimal? valorMax,
+        bool? apenasComDocumentos,
         CancellationToken cancellationToken)
     {
         var query = _db.IdaIdeias
             .Include(i => i.Status)
             .Include(i => i.Categoria)
             .Include(i => i.Estagio)
+            .Include(i => i.Usuario).ThenInclude(u => u!.Plano)
             .Include(i => i.Info)
             .Include(i => i.Documentos)
             .AsQueryable();
@@ -160,10 +168,21 @@ public sealed class IdeiaRepository : IIdeiaRepository
             query = query.Where(i => i.Info != null && i.Info.ValorCaptacao <= valorMax.Value);
         }
 
-        return query.OrderByDescending(i => i.Id).ToListAsync(cancellationToken);
+        if (apenasComDocumentos == true)
+        {
+            query = query.Where(i => i.Documentos.Any());
+        }
+
+        return query
+            .OrderByDescending(i => i.Usuario != null ? i.Usuario.PlanoId : 0)
+            .ThenByDescending(i => i.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public Task<int> CountAsync(CancellationToken cancellationToken) => _db.IdaIdeias.CountAsync(cancellationToken);
+
+    public Task<int> CountAtivasByUsuarioAsync(long usuarioId, CancellationToken cancellationToken)
+        => _db.IdaIdeias.CountAsync(i => i.UsuarioId == usuarioId && (i.StatusId == 1 || i.StatusId == 2), cancellationToken);
 
     public Task AddAsync(IdaIdeia ideia, CancellationToken cancellationToken) => _db.IdaIdeias.AddAsync(ideia, cancellationToken).AsTask();
 
@@ -255,6 +274,7 @@ public sealed class EfPropostaRepository : IPropostaRepository
     {
         return _db.PrpPropostas
             .Include(p => p.Ideia)
+            .Include(p => p.Usuario).ThenInclude(u => u!.Plano)
             .Include(p => p.Infos).ThenInclude(i => i.Aceite)
             .FirstOrDefaultAsync(p => p.Id == prpId, cancellationToken);
     }
@@ -263,6 +283,7 @@ public sealed class EfPropostaRepository : IPropostaRepository
     {
         return _db.PrpPropostas
             .Include(p => p.Ideia)
+            .Include(p => p.Usuario).ThenInclude(u => u!.Plano)
             .Include(p => p.Infos).ThenInclude(i => i.Aceite)
             .Where(p => p.UsuarioId == usuarioId)
             .OrderByDescending(p => p.Id)
@@ -273,9 +294,11 @@ public sealed class EfPropostaRepository : IPropostaRepository
     {
         return _db.PrpPropostas
             .Include(p => p.Ideia)
+            .Include(p => p.Usuario).ThenInclude(u => u!.Plano)
             .Include(p => p.Infos).ThenInclude(i => i.Aceite)
             .Where(p => p.Ideia != null && p.Ideia.UsuarioId == empreendedorId)
-            .OrderByDescending(p => p.Id)
+            .OrderByDescending(p => p.Usuario != null ? p.Usuario.PlanoId : 0)
+            .ThenByDescending(p => p.Id)
             .ToListAsync(cancellationToken);
     }
 
@@ -284,9 +307,11 @@ public sealed class EfPropostaRepository : IPropostaRepository
     {
         return _db.PrpPropostas
             .Include(p => p.Ideia)
+            .Include(p => p.Usuario).ThenInclude(u => u!.Plano)
             .Include(p => p.Infos).ThenInclude(i => i.Aceite)
             .Where(p => p.IdeiaId == ideiaId && p.Status)
-            .OrderByDescending(p => p.Id)
+            .OrderByDescending(p => p.Usuario != null ? p.Usuario.PlanoId : 0)
+            .ThenByDescending(p => p.Id)
             .ToListAsync(cancellationToken);
     }
 
@@ -297,6 +322,30 @@ public sealed class EfPropostaRepository : IPropostaRepository
         return _db.PrpPropostas
             .Include(p => p.Infos)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasPropostaAceitaEntreUsuariosAsync(long usuarioAId, long usuarioBId, long ideiaId, CancellationToken cancellationToken)
+    {
+        var propostas = await _db.PrpPropostas
+            .Include(p => p.Ideia)
+            .Include(p => p.Infos)
+            .Where(p =>
+                p.Status &&
+                p.IdeiaId == ideiaId &&
+                p.Ideia != null &&
+                (
+                    (p.UsuarioId == usuarioAId && p.Ideia.UsuarioId == usuarioBId) ||
+                    (p.UsuarioId == usuarioBId && p.Ideia.UsuarioId == usuarioAId)
+                ))
+            .ToListAsync(cancellationToken);
+
+        foreach (var p in propostas)
+        {
+            var ultima = p.Infos.OrderByDescending(i => i.CreateDate).FirstOrDefault();
+            if (ultima?.AceiteId == 1) return true;
+        }
+
+        return false;
     }
 
     public void Update(PrpProposta proposta) => _db.PrpPropostas.Update(proposta);

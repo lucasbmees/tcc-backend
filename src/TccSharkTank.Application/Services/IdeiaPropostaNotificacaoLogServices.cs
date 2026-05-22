@@ -21,6 +21,7 @@ public interface IIdeiaService
         string? regiao,
         decimal? valorMin,
         decimal? valorMax,
+        bool? apenasComDocumentos,
         CancellationToken cancellationToken);
     Task<IdeiaDetailsResponse> DetalhesAsync(long idaId, CancellationToken cancellationToken);
     Task<IdeiaDetailsResponse> EditarAsync(long idaId, long usuarioId, UpdateIdeiaRequest request, CancellationToken cancellationToken);
@@ -99,6 +100,7 @@ public sealed class IdeiaService : IIdeiaService
 {
     private readonly IIdeiaRepository _ideias;
     private readonly ILookupRepository _lookup;
+    private readonly IUsuarioRepository _usuarios;
     private readonly IUnitOfWork _uow;
     private readonly IClock _clock;
     private readonly IFileStorage _fileStorage;
@@ -108,6 +110,7 @@ public sealed class IdeiaService : IIdeiaService
     public IdeiaService(
         IIdeiaRepository ideias, 
         ILookupRepository lookup, 
+        IUsuarioRepository usuarios,
         IUnitOfWork uow, 
         IClock clock, 
         IFileStorage fileStorage, 
@@ -116,6 +119,7 @@ public sealed class IdeiaService : IIdeiaService
     {
         _ideias = ideias;
         _lookup = lookup;
+        _usuarios = usuarios;
         _uow = uow;
         _clock = clock;
         _fileStorage = fileStorage;
@@ -125,6 +129,21 @@ public sealed class IdeiaService : IIdeiaService
 
     public async Task<IdeiaDetailsResponse> CadastrarAsync(long usuarioId, CreateIdeiaRequest request, CancellationToken cancellationToken)
     {
+        var usuario = await _usuarios.GetByIdAsync(usuarioId, cancellationToken)
+            ?? throw new AppException("Usuário não encontrado.", 404);
+
+        var cargo = (usuario.Cargo?.Nome ?? string.Empty).ToLowerInvariant();
+        var plano = (usuario.Plano?.Nome ?? string.Empty).ToLowerInvariant();
+
+        if (cargo == "empreendedor" && (plano == "" || plano == "basico"))
+        {
+            var ativas = await _ideias.CountAtivasByUsuarioAsync(usuarioId, cancellationToken);
+            if (ativas >= 2)
+            {
+                throw new AppException("Limite do plano básico: máximo de 2 ideias ativas. Assine o Pro para publicar ideias ilimitadas.", 403);
+            }
+        }
+
         if (await _lookup.GetIdeiaCategoriaByIdAsync(request.CategoriaId, cancellationToken) is null)
         {
             throw new AppException("Categoria inválida.", 400);
@@ -175,9 +194,10 @@ public sealed class IdeiaService : IIdeiaService
         string? regiao,
         decimal? valorMin,
         decimal? valorMax,
+        bool? apenasComDocumentos,
         CancellationToken cancellationToken)
     {
-        var ideias = await _ideias.ListAsync(termo, categoriaId, estagioId, regiao, valorMin, valorMax, cancellationToken);
+        var ideias = await _ideias.ListAsync(termo, categoriaId, estagioId, regiao, valorMin, valorMax, apenasComDocumentos, cancellationToken);
         return ideias.Select(MapIdeia).ToList();
     }
 
@@ -706,6 +726,15 @@ public sealed class PropostaService : IPropostaService
 
     private static PropostaResponse Map(PrpProposta p)
     {
+        var planoCodigo = p.Usuario?.Plano?.Nome;
+        var planoNome = planoCodigo switch
+        {
+            "elite" => "Elite",
+            "pro" => "Pro",
+            "basico" => "Básico",
+            _ => null
+        };
+
         return new PropostaResponse(
             PrpId: p.Id,
             PrpIdeiaId: p.IdeiaId,
@@ -722,7 +751,9 @@ public sealed class PropostaService : IPropostaService
                     Retorno: i.Retorno,
                     CreateDate: i.CreateDate,
                     UpdateDate: i.UpdateDate))
-                .ToList()
+                .ToList(),
+            InvestidorPlanoCodigo: planoCodigo,
+            InvestidorPlanoNome: planoNome
         );
     }
 }

@@ -14,6 +14,33 @@ public sealed record LoginRequest(string Email, string Senha);
 
 public sealed record AuthResponse(long UsuarioId, string Cargo, string Token);
 
+public sealed record RecuperarSenhaRequest(string Email);
+
+public sealed record RecuperarSenhaResponse(string Mensagem, string? Token);
+
+public sealed record RedefinirSenhaRequest(string Token, string NovaSenha);
+
+public sealed record MensagemResponseSimples(string Mensagem);
+
+public sealed record PlanoInfoResponse(
+    int Id,
+    string Nome,
+    string Codigo
+);
+
+public sealed record PlanoMeuResponse(
+    PlanoInfoResponse Plano,
+    List<string> Regalias
+);
+
+public sealed record AssinarPlanoRequest(string PlanoCodigo);
+
+public sealed record AssinarPlanoResponse(
+    string Mensagem,
+    PlanoInfoResponse Plano,
+    string Token
+);
+
 public sealed record UpdateUserRequest(
     string? Email,
     string? Telefone,
@@ -171,7 +198,9 @@ public sealed record PropostaResponse(
     long PrpIdeiaId,
     long PrpUsuarioId,
     bool PrpStatus,
-    List<PropostaInfoResponse> Infos
+    List<PropostaInfoResponse> Infos,
+    string? InvestidorPlanoCodigo = null,
+    string? InvestidorPlanoNome = null
 );
 
 public sealed record PropostaInfoResponse(
@@ -188,4 +217,3 @@ public sealed record PropostaInfoResponse(
 public sealed record DispararNotificacaoRequest(long UsuarioId, int TipoId, string Mensagem);
 
 public sealed record NotificacaoResponse(long NtfId, int TipoId, string TipoNome, string Mensagem, bool Lida, DateTime CreateDate);
-

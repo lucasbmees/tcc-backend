@@ -44,7 +44,7 @@ public sealed class DashboardService : IDashboardService
 
         // Volume por mês (últimos 6 meses)
         // Como as ideias são AuditableEntityBase, elas têm CreateDate
-        var ideias = await _ideias.ListAsync(null, null, null, null, null, null, cancellationToken);
+        var ideias = await _ideias.ListAsync(null, null, null, null, null, null, null, cancellationToken);
         var volumeMensal = ideias
             .GroupBy(i => new { i.CreateDate.Year, i.CreateDate.Month })
             .OrderByDescending(g => g.Key.Year).ThenByDescending(g => g.Key.Month)
