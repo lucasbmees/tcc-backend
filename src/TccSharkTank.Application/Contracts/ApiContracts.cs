@@ -217,3 +217,5 @@ public sealed record PropostaInfoResponse(
 public sealed record DispararNotificacaoRequest(long UsuarioId, int TipoId, string Mensagem);
 
 public sealed record NotificacaoResponse(long NtfId, int TipoId, string TipoNome, string Mensagem, bool Lida, DateTime CreateDate);
+
+public record GeminiSearchResponse(string candidates);

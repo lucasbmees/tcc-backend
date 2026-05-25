@@ -52,6 +52,30 @@ public sealed class IdeiasController : ControllerBase
         return _ideias.ListarAsync(termo, categoriaId, estagioId, regiao, valorMin, valorMax, apenasComDocumentos, cancellationToken);
     }
 
+    // =================================================================
+    // NOVO MÉTODO DA BUSCA INTELIGENTE (IA) 
+    // =================================================================
+    [AllowAnonymous]
+    [HttpGet("busca-ia")]
+    public async Task<List<IdeiaDetailsResponse>> BuscaInteligente(
+        [FromQuery] string termo, 
+        [FromServices] IGeminiService gemini,
+        CancellationToken cancellationToken)
+    {
+        var todasAsIdeias = await _ideias.ListarAsync(null, null, null, null, null, null, null, cancellationToken);
+        
+        if (string.IsNullOrWhiteSpace(termo) || !todasAsIdeias.Any())
+            return todasAsIdeias; 
+
+        // Contexto corrigido com IdaId, IdaNome e IdaDescricao
+        var contexto = string.Join(" | ", todasAsIdeias.Select(i => $"[{i.IdaId} - {i.IdaNome} - {i.Info?.IdaInfoDescricao}]"));
+        var idsFiltrados = await gemini.FiltrarIdeiasComIA(termo, contexto, cancellationToken);
+
+        // Filtro do return corrigido com IdaId
+        return todasAsIdeias.Where(i => idsFiltrados.Contains(i.IdaId)).ToList();
+    }
+    // =================================================================
+
     [Authorize]
     [HttpGet("{id:long}/relatorio")]
     public async Task<IActionResult> Relatorio([FromRoute] long id, CancellationToken cancellationToken)
