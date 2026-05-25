@@ -1,3 +1,4 @@
+using TccSharkTank.Application.Services;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// Adicione isto antes do builder.Build()
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 
 var app = builder.Build();
 
