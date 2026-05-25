@@ -12,7 +12,7 @@ public interface IGeminiService
 public sealed class GeminiService : IGeminiService
 {
     private readonly HttpClient _httpClient;
-    private readonly string _apiKey = "AIzaSyChlGxGhvBxXHr-yoypWBPiYgW3Az9Q1Ng"; 
+    private readonly string _apiKey = "COLOCA A CHAVE AQUI"; 
 
     public GeminiService(HttpClient httpClient)
     {
