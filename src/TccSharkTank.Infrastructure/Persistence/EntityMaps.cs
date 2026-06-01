@@ -83,6 +83,7 @@ internal sealed class UsuPerfilMap : IEntityTypeConfiguration<UsuPerfil>
         e.Property(x => x.Id).HasColumnName("usu_perfil_id").ValueGeneratedOnAdd();
         e.Property(x => x.UsuarioId).HasColumnName("usu_usuario_id").IsRequired();
         e.Property(x => x.Descricao).HasColumnName("usu_perfil_descricao").HasMaxLength(2000);
+        e.Property(x => x.Historia).HasColumnName("usu_perfil_historia").HasMaxLength(4000);
         e.Property(x => x.Cep).HasColumnName("usu_perfil_cep").HasMaxLength(20);
         e.Property(x => x.DataNasc).HasColumnName("usu_perfil_data_nasc");
         e.Property(x => x.LinkRedes).HasColumnName("usu_perfil_link_redes").HasMaxLength(1000);
@@ -227,6 +228,11 @@ internal sealed class IdaInfoMap : IEntityTypeConfiguration<IdaInfo>
         e.Property(x => x.Imagem).HasColumnName("ida_info_imagem").HasMaxLength(2000);
         e.Property(x => x.Fatia).HasColumnName("ida_info_fatia").HasPrecision(5, 2).IsRequired();
         e.Property(x => x.ValorCaptacao).HasColumnName("ida_info_valor_captacao").HasPrecision(18, 2).HasDefaultValue(0m).IsRequired();
+        e.Property(x => x.Faturamento).HasColumnName("ida_info_faturamento").HasPrecision(18, 2);
+        e.Property(x => x.CustosMensais).HasColumnName("ida_info_custos_mensais").HasPrecision(18, 2);
+        e.Property(x => x.TempoMercadoMeses).HasColumnName("ida_info_tempo_mercado_meses");
+        e.Property(x => x.QuantidadeClientes).HasColumnName("ida_info_quantidade_clientes");
+        e.Property(x => x.FeedbackClientes).HasColumnName("ida_info_feedback_clientes").HasMaxLength(4000);
         e.Property(x => x.CreateDate).HasColumnName("ida_info_create_date").IsRequired();
         e.Property(x => x.UpdateDate).HasColumnName("ida_info_update_date").IsRequired();
 

@@ -297,6 +297,7 @@ public sealed class UsuarioService : IUsuarioService
             };
 
             usuario.Perfil.Descricao = request.Perfil.Descricao;
+            usuario.Perfil.Historia = request.Perfil.Historia;
             usuario.Perfil.Cep = request.Perfil.Cep;
             usuario.Perfil.DataNasc = request.Perfil.DataNasc;
             usuario.Perfil.LinkRedes = request.Perfil.LinkRedes;
@@ -352,6 +353,7 @@ public sealed class UsuarioService : IUsuarioService
                 ? null
                 : new PerfilResponse(
                     Descricao: u.Perfil.Descricao,
+                    Historia: u.Perfil.Historia,
                     Cep: u.Perfil.Cep,
                     DataNasc: u.Perfil.DataNasc,
                     LinkRedes: u.Perfil.LinkRedes,

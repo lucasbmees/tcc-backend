@@ -67,6 +67,11 @@ async function createIdeia(tokenEmpreendedor, { nome, cnpjBase }) {
     imagem: null,
     fatia: 10,
     valorCaptacao: 10000,
+    faturamento: 5000,
+    custosMensais: 1200,
+    tempoMercadoMeses: 6,
+    quantidadeClientes: 20,
+    feedbackClientes: 'Feedback (smoke test): clientes elogiaram a simplicidade e pediram mais integrações.',
   };
 
   const res = await http('/api/ideias', { method: 'POST', token: tokenEmpreendedor, json: payload });

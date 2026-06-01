@@ -52,6 +52,7 @@ public sealed record UpdateUserRequest(
 
 public sealed record UpdatePerfilRequest(
     string? Descricao,
+    string? Historia,
     string? Cep,
     DateTime? DataNasc,
     string? LinkRedes,
@@ -78,6 +79,7 @@ public sealed record UserDetailsResponse(
 
 public sealed record PerfilResponse(
     string? Descricao,
+    string? Historia,
     string? Cep,
     DateTime? DataNasc,
     string? LinkRedes,
@@ -101,7 +103,12 @@ public sealed record CreateIdeiaRequest(
     string? LinkVideo,
     string? Imagem,
     decimal Fatia,
-    decimal ValorCaptacao
+    decimal ValorCaptacao,
+    decimal? Faturamento,
+    decimal? CustosMensais,
+    int? TempoMercadoMeses,
+    int? QuantidadeClientes,
+    string? FeedbackClientes
 );
 
 public sealed record UpdateIdeiaRequest(
@@ -114,7 +121,12 @@ public sealed record UpdateIdeiaRequest(
     string? LinkVideo,
     string? Imagem,
     decimal? Fatia,
-    decimal? ValorCaptacao
+    decimal? ValorCaptacao,
+    decimal? Faturamento,
+    decimal? CustosMensais,
+    int? TempoMercadoMeses,
+    int? QuantidadeClientes,
+    string? FeedbackClientes
 );
 
 public sealed record IdeiaDetailsResponse(
@@ -181,6 +193,11 @@ public sealed record IdeiaInfoResponse(
     string? IdaInfoImagem,
     decimal IdaInfoFatia,
     decimal IdaInfoValorCaptacao,
+    decimal? IdaInfoFaturamento,
+    decimal? IdaInfoCustosMensais,
+    int? IdaInfoTempoMercadoMeses,
+    int? IdaInfoQuantidadeClientes,
+    string? IdaInfoFeedbackClientes,
     DateTime CreateDate,
     DateTime UpdateDate
 );

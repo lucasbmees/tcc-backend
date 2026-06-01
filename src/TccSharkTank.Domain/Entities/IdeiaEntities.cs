@@ -67,6 +67,11 @@ public sealed class IdaInfo : AuditableEntityBase<long>
     public string? Imagem { get; set; }
     public decimal Fatia { get; set; }
     public decimal ValorCaptacao { get; set; }
+    public decimal? Faturamento { get; set; }
+    public decimal? CustosMensais { get; set; }
+    public int? TempoMercadoMeses { get; set; }
+    public int? QuantidadeClientes { get; set; }
+    public string? FeedbackClientes { get; set; }
 
     public IdaIdeia? Ideia { get; set; }
 }

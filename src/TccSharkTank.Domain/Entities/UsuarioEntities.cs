@@ -44,6 +44,7 @@ public sealed class UsuPerfil : AuditableEntityBase<long>
 {
     public long UsuarioId { get; set; }
     public string? Descricao { get; set; }
+    public string? Historia { get; set; }
     public string? Cep { get; set; }
     public DateTime? DataNasc { get; set; }
     public string? LinkRedes { get; set; }

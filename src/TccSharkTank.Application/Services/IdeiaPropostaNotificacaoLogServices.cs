@@ -177,6 +177,11 @@ public sealed class IdeiaService : IIdeiaService
             Imagem = request.Imagem,
             Fatia = request.Fatia,
             ValorCaptacao = request.ValorCaptacao,
+            Faturamento = request.Faturamento,
+            CustosMensais = request.CustosMensais,
+            TempoMercadoMeses = request.TempoMercadoMeses,
+            QuantidadeClientes = request.QuantidadeClientes,
+            FeedbackClientes = request.FeedbackClientes,
             CreateDate = _clock.UtcNow,
             UpdateDate = _clock.UtcNow
         };
@@ -289,6 +294,26 @@ public sealed class IdeiaService : IIdeiaService
         if (request.ValorCaptacao.HasValue)
         {
             ideia.Info.ValorCaptacao = request.ValorCaptacao.Value;
+        }
+        if (request.Faturamento.HasValue)
+        {
+            ideia.Info.Faturamento = request.Faturamento.Value;
+        }
+        if (request.CustosMensais.HasValue)
+        {
+            ideia.Info.CustosMensais = request.CustosMensais.Value;
+        }
+        if (request.TempoMercadoMeses.HasValue)
+        {
+            ideia.Info.TempoMercadoMeses = request.TempoMercadoMeses.Value;
+        }
+        if (request.QuantidadeClientes.HasValue)
+        {
+            ideia.Info.QuantidadeClientes = request.QuantidadeClientes.Value;
+        }
+        if (request.FeedbackClientes is not null)
+        {
+            ideia.Info.FeedbackClientes = request.FeedbackClientes;
         }
 
         ideia.Info.UpdateDate = _clock.UtcNow;
@@ -406,6 +431,11 @@ public sealed class IdeiaService : IIdeiaService
                     IdaInfoImagem: i.Info.Imagem,
                     IdaInfoFatia: i.Info.Fatia,
                     IdaInfoValorCaptacao: i.Info.ValorCaptacao,
+                    IdaInfoFaturamento: i.Info.Faturamento,
+                    IdaInfoCustosMensais: i.Info.CustosMensais,
+                    IdaInfoTempoMercadoMeses: i.Info.TempoMercadoMeses,
+                    IdaInfoQuantidadeClientes: i.Info.QuantidadeClientes,
+                    IdaInfoFeedbackClientes: i.Info.FeedbackClientes,
                     CreateDate: i.Info.CreateDate,
                     UpdateDate: i.Info.UpdateDate),
             Documentos: i.Documentos.Select(d => new IdeiaDocumentoResponse(d.Id, d.Arquivo)).ToList(),
