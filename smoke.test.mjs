@@ -297,6 +297,12 @@ async function main() {
     const ultimo = infos[infos.length - 1] ?? {};
     const aceiteNome = (ultimo.aceiteNome ?? ultimo.AceiteNome ?? '').toLowerCase();
     assert(aceiteNome.includes('aceit'), `Status esperado "aceita", veio "${aceiteNome}"`);
+
+    const contrato = await http(`/api/propostas/${propostaId}/contrato`, { token: empreendedorPro.token });
+    const contratoText = await contrato.text();
+    assert(contrato.ok, `Esperado 200 no contrato, veio ${contrato.status}`);
+    assert(!/valor de\\s+R\\$\\s*0,00/i.test(contratoText) && !/valor de\\s+\\$0\\.00/i.test(contratoText), 'Contrato retornou valor zerado');
+    assert(!/participa[cç][aã]o\\s+societ[aá]ria\\s+de\\s+0(?:[\\.,]0+)?%/i.test(contratoText), 'Contrato retornou equity zerado');
   });
 
   await step('Fluxo: contato (chat) entre investidor e empreendedor após aceite', async () => {

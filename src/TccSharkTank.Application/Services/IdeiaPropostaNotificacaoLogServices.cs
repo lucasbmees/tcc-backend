@@ -70,6 +70,9 @@ public sealed class LogService : ILogService
             "cadastro" => 1,
             "edição" => 2,
             "edicao" => 2,
+            "comentário" => 2,
+            "comentario" => 2,
+            "plano" => 2,
             "proposta" => 3,
             "login" => 4,
             _ => 0
@@ -438,7 +441,7 @@ public sealed class IdeiaService : IIdeiaService
                     IdaInfoFeedbackClientes: i.Info.FeedbackClientes,
                     CreateDate: i.Info.CreateDate,
                     UpdateDate: i.Info.UpdateDate),
-            Documentos: i.Documentos.Select(d => new IdeiaDocumentoResponse(d.Id, d.Arquivo)).ToList(),
+            Documentos: i.Documentos.Select(d => new IdeiaDocumentoResponse(d.Id, $"/api/ideias/{i.Id}/documentos/{d.Id}/download")).ToList(),
             Comentarios: i.Comentarios.Where(c => c.ParentId == null).Select(MapComentario).ToList()
         );
     }
