@@ -125,15 +125,15 @@ Repetir com `empreendedor@tcc.local` → assinar **Pro**.
 
 ### 5.3 Upload de documentos
 
-1. Fazer upload de documento em uma ideia.
-2. Validar que o documento aparece no detalhe da ideia.
+1. Fazer upload de documento PDF (ex: pitch deck, contrato social, demonstrativos, etc.) em uma ideia.
+2. Validar que o documento aparece no detalhe da ideia para o dono e para planos pagos.
 
 ## 6) Explorar ideias (visitante e investidor)
 
 ### 6.1 Listagem + filtros públicos
 
-1. Acessar Explorar Ideias deslogado.
-2. Testar filtros: termo, categoria, estágio, região, valor min/max.
+1. Acessar Explorar Ideias deslogado → deve redirecionar/bloquear e exigir login.
+2. Testar filtros (logado): termo, categoria, estágio, região, valor min/max.
 3. Abrir detalhe de uma ideia.
 
 ### 6.2 Comentários

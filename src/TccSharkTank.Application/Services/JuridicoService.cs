@@ -34,11 +34,24 @@ public sealed class JuridicoService : IJuridicoService
         var ideia = await _ideias.GetByIdAsync(proposta.IdeiaId, cancellationToken);
         if (ideia is null) throw new AppException("Ideia não encontrada.", 404);
 
-        var ultima = proposta.Infos.OrderByDescending(i => i.CreateDate).FirstOrDefault();
-        if (ultima?.AceiteId != 1)
+        var aceita = proposta.Infos.OrderByDescending(i => i.CreateDate).FirstOrDefault(i => i.AceiteId == 1);
+        if (aceita is null)
         {
             throw new AppException("Contrato disponível apenas após a proposta ser aceita.", 403);
         }
+
+        var termos = proposta.Infos
+            .Where(i => i.Valor > 0m && i.FatiaPret > 0m)
+            .OrderByDescending(i => i.CreateDate)
+            .FirstOrDefault()
+            ?? proposta.Infos.OrderBy(i => i.CreateDate).FirstOrDefault();
+
+        if (termos is null)
+        {
+            throw new AppException("Proposta sem informações para gerar contrato.", 500);
+        }
+
+        var equityPercent = termos.FatiaPret <= 1m ? termos.FatiaPret * 100m : termos.FatiaPret;
 
         if (usuarioId != proposta.UsuarioId && usuarioId != ideia.UsuarioId)
         {
@@ -60,7 +73,7 @@ Pelo presente instrumento particular, as partes abaixo qualificadas:
 
 Resolvem celebrar este Termo de Compromisso de Investimento, mediante as seguintes cláusulas:
 
-1. **OBJETO:** O Investidor compromete-se a aportar o valor de {ultima?.Valor:C2} na Startup, em troca de uma participação societária de {ultima?.FatiaPret:P2} (Equity).
+1. **OBJETO:** O Investidor compromete-se a aportar o valor de {termos.Valor:C2} na Startup, em troca de uma participação societária de {equityPercent:0.##}% (Equity).
 2. **CONDIÇÕES:** O aporte será realizado após a formalização final dos documentos societários, no prazo de 30 dias.
 3. **VALIDADE:** Este termo passa a valer a partir do aceite digital realizado na plataforma TCC Shark Tank em {proposta.UpdateDate:dd/MM/yyyy HH:mm}.
 

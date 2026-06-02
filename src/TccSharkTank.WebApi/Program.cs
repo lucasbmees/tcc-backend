@@ -1,5 +1,6 @@
 using TccSharkTank.Application.Services;
 using System.Text;
+using System.IO;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,48 @@ using TccSharkTank.Domain.Entities;
 using TccSharkTank.WebApi.Middleware;
 using TccSharkTank.WebApi.Security;
 // Adicione o namespace do seu DbContext se necessário (ex: using TccSharkTank.Infrastructure.Persistence;)
+
+static void LoadDotEnv()
+{
+    static string? FindDotEnv(string start)
+    {
+        var current = start;
+        for (var i = 0; i < 8; i++)
+        {
+            var candidate = Path.Combine(current, ".env");
+            if (File.Exists(candidate)) return candidate;
+            var parent = Directory.GetParent(current);
+            if (parent is null) return null;
+            current = parent.FullName;
+        }
+        return null;
+    }
+
+    var path = FindDotEnv(Directory.GetCurrentDirectory());
+    if (path is null) return;
+
+    foreach (var rawLine in File.ReadAllLines(path))
+    {
+        var line = rawLine.Trim();
+        if (line.Length == 0) continue;
+        if (line.StartsWith('#')) continue;
+        var idx = line.IndexOf('=');
+        if (idx <= 0) continue;
+        var key = line[..idx].Trim();
+        if (key.Length == 0) continue;
+        var value = line[(idx + 1)..].Trim();
+        if (value.Length >= 2 && value.StartsWith('"') && value.EndsWith('"'))
+        {
+            value = value[1..^1];
+        }
+        if (Environment.GetEnvironmentVariable(key) is null)
+        {
+            Environment.SetEnvironmentVariable(key, value);
+        }
+    }
+}
+
+LoadDotEnv();
 
 var builder = WebApplication.CreateBuilder(args);
 
