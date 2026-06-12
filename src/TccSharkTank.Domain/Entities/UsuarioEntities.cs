@@ -8,6 +8,14 @@ public sealed class UsuCargo
     public ICollection<UsuUsuario> Usuarios { get; set; } = new List<UsuUsuario>();
 }
 
+public sealed class UsuPlano
+{
+    public int Id { get; set; }
+    public required string Nome { get; set; }
+
+    public ICollection<UsuUsuario> Usuarios { get; set; } = new List<UsuUsuario>();
+}
+
 public sealed class UsuUsuario
 {
     public long Id { get; set; }
@@ -16,12 +24,14 @@ public sealed class UsuUsuario
     public required string Telefone { get; set; }
     public required string Senha { get; set; }
     public int CargoId { get; set; }
+    public int PlanoId { get; set; } = 1;
     public bool Status { get; set; } = true;
     public DateTime? UltimoLogin { get; set; }
     public required string Nome { get; set; }
     public required string Sobrenome { get; set; }
 
     public UsuCargo? Cargo { get; set; }
+    public UsuPlano? Plano { get; set; }
     public UsuPerfil? Perfil { get; set; }
 
     public ICollection<IdaIdeia> Ideias { get; set; } = new List<IdaIdeia>();
@@ -34,9 +44,20 @@ public sealed class UsuPerfil : AuditableEntityBase<long>
 {
     public long UsuarioId { get; set; }
     public string? Descricao { get; set; }
+    public string? Historia { get; set; }
     public string? Cep { get; set; }
     public DateTime? DataNasc { get; set; }
     public string? LinkRedes { get; set; }
+
+    // Campos específicos para Investidor
+    public decimal? InvestTicketMin { get; set; }
+    public decimal? InvestTicketMax { get; set; }
+    public string? InvestInteresses { get; set; } // Categorias separadas por vírgula ou JSON
+
+    // Preferências de Notificação (Módulo 7)
+    public bool ReceberEmailPropostas { get; set; } = true;
+    public bool ReceberEmailMensagens { get; set; } = true;
+    public bool ReceberEmailAlertas { get; set; } = true;
 
     public UsuUsuario? Usuario { get; set; }
 }

@@ -14,6 +14,33 @@ public sealed record LoginRequest(string Email, string Senha);
 
 public sealed record AuthResponse(long UsuarioId, string Cargo, string Token);
 
+public sealed record RecuperarSenhaRequest(string Email);
+
+public sealed record RecuperarSenhaResponse(string Mensagem, string? Token);
+
+public sealed record RedefinirSenhaRequest(string Token, string NovaSenha);
+
+public sealed record MensagemResponseSimples(string Mensagem);
+
+public sealed record PlanoInfoResponse(
+    int Id,
+    string Nome,
+    string Codigo
+);
+
+public sealed record PlanoMeuResponse(
+    PlanoInfoResponse Plano,
+    List<string> Regalias
+);
+
+public sealed record AssinarPlanoRequest(string PlanoCodigo);
+
+public sealed record AssinarPlanoResponse(
+    string Mensagem,
+    PlanoInfoResponse Plano,
+    string Token
+);
+
 public sealed record UpdateUserRequest(
     string? Email,
     string? Telefone,
@@ -25,9 +52,16 @@ public sealed record UpdateUserRequest(
 
 public sealed record UpdatePerfilRequest(
     string? Descricao,
+    string? Historia,
     string? Cep,
     DateTime? DataNasc,
-    string? LinkRedes
+    string? LinkRedes,
+    decimal? InvestTicketMin,
+    decimal? InvestTicketMax,
+    string? InvestInteresses,
+    bool? ReceberEmailPropostas,
+    bool? ReceberEmailMensagens,
+    bool? ReceberEmailAlertas
 );
 
 public sealed record UserDetailsResponse(
@@ -45,44 +79,111 @@ public sealed record UserDetailsResponse(
 
 public sealed record PerfilResponse(
     string? Descricao,
+    string? Historia,
     string? Cep,
     DateTime? DataNasc,
     string? LinkRedes,
+    decimal? InvestTicketMin,
+    decimal? InvestTicketMax,
+    string? InvestInteresses,
+    bool ReceberEmailPropostas,
+    bool ReceberEmailMensagens,
+    bool ReceberEmailAlertas,
     DateTime CreateDate,
     DateTime UpdateDate
 );
 
 public sealed record CreateIdeiaRequest(
     int CategoriaId,
+    int EstagioId,
     string Nome,
+    string? Regiao,
     string Cnpj,
     string? Descricao,
     string? LinkVideo,
     string? Imagem,
-    decimal Fatia
+    decimal Fatia,
+    decimal ValorCaptacao,
+    decimal? Faturamento,
+    decimal? CustosMensais,
+    int? TempoMercadoMeses,
+    int? QuantidadeClientes,
+    string? FeedbackClientes
 );
 
 public sealed record UpdateIdeiaRequest(
     int? CategoriaId,
+    int? EstagioId,
     string? Nome,
+    string? Regiao,
     string? Cnpj,
     string? Descricao,
     string? LinkVideo,
     string? Imagem,
-    decimal? Fatia
+    decimal? Fatia,
+    decimal? ValorCaptacao,
+    decimal? Faturamento,
+    decimal? CustosMensais,
+    int? TempoMercadoMeses,
+    int? QuantidadeClientes,
+    string? FeedbackClientes
 );
 
 public sealed record IdeiaDetailsResponse(
     long IdaId,
     long IdaUsuarioId,
     string IdaNome,
+    string? Regiao,
     int IdaCategoriaId,
     string CategoriaNome,
+    int IdaEstagioId,
+    string EstagioNome,
     int IdaStatusId,
     string StatusNome,
     string? IdaMotivoStatus,
     IdeiaInfoResponse? Info,
-    List<IdeiaDocumentoResponse> Documentos
+    List<IdeiaDocumentoResponse> Documentos,
+    List<ComentarioResponse> Comentarios
+);
+
+public sealed record ComentarioResponse(
+    long Id,
+    long UsuarioId,
+    string UsuarioNome,
+    long? ParentId,
+    string Texto,
+    DateTime CreateDate,
+    List<ComentarioResponse> Replies
+);
+
+public sealed record CreateComentarioRequest(
+    string Texto,
+    long? ParentId = null
+);
+
+public sealed record ConversaResponse(
+    long Id,
+    long OutroUsuarioId,
+    string OutroUsuarioNome,
+    long? IdeiaId,
+    string? IdeiaNome,
+    DateTime UpdateDate,
+    MensagemResponse? UltimaMensagem
+);
+
+public sealed record MensagemResponse(
+    long Id,
+    long RemetenteId,
+    string RemetenteNome,
+    string Texto,
+    bool Lida,
+    DateTime CreateDate
+);
+
+public sealed record CreateMensagemRequest(
+    long? ParaUsuarioId, // Usado para iniciar conversa
+    long? IdeiaId,       // Opcional: contexto da conversa
+    string Texto
 );
 
 public sealed record IdeiaInfoResponse(
@@ -91,6 +192,12 @@ public sealed record IdeiaInfoResponse(
     string? IdaInfoLinkVideo,
     string? IdaInfoImagem,
     decimal IdaInfoFatia,
+    decimal IdaInfoValorCaptacao,
+    decimal? IdaInfoFaturamento,
+    decimal? IdaInfoCustosMensais,
+    int? IdaInfoTempoMercadoMeses,
+    int? IdaInfoQuantidadeClientes,
+    string? IdaInfoFeedbackClientes,
     DateTime CreateDate,
     DateTime UpdateDate
 );
@@ -108,7 +215,9 @@ public sealed record PropostaResponse(
     long PrpIdeiaId,
     long PrpUsuarioId,
     bool PrpStatus,
-    List<PropostaInfoResponse> Infos
+    List<PropostaInfoResponse> Infos,
+    string? InvestidorPlanoCodigo = null,
+    string? InvestidorPlanoNome = null
 );
 
 public sealed record PropostaInfoResponse(
@@ -126,3 +235,4 @@ public sealed record DispararNotificacaoRequest(long UsuarioId, int TipoId, stri
 
 public sealed record NotificacaoResponse(long NtfId, int TipoId, string TipoNome, string Mensagem, bool Lida, DateTime CreateDate);
 
+public record GeminiSearchResponse(string candidates);

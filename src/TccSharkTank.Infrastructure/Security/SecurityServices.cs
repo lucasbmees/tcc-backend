@@ -76,12 +76,14 @@ public sealed class JwtTokenService : IJwtTokenService
         var creds = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var role = usuario.Cargo?.Nome ?? usuario.CargoId.ToString();
+        var plan = usuario.Plano?.Nome ?? usuario.PlanoId.ToString();
 
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
             new(ClaimTypes.Email, usuario.Email),
             new(ClaimTypes.Role, role),
+            new("plan", plan),
         };
 
         var token = new JwtSecurityToken(

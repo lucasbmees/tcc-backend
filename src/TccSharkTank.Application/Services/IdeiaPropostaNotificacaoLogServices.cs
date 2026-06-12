@@ -14,18 +14,29 @@ public interface ILogService
 public interface IIdeiaService
 {
     Task<IdeiaDetailsResponse> CadastrarAsync(long usuarioId, CreateIdeiaRequest request, CancellationToken cancellationToken);
-    Task<List<IdeiaDetailsResponse>> ListarAsync(int? categoriaId, CancellationToken cancellationToken);
+    Task<List<IdeiaDetailsResponse>> ListarAsync(
+        string? termo,
+        int? categoriaId,
+        int? estagioId,
+        string? regiao,
+        decimal? valorMin,
+        decimal? valorMax,
+        bool? apenasComDocumentos,
+        CancellationToken cancellationToken);
     Task<IdeiaDetailsResponse> DetalhesAsync(long idaId, CancellationToken cancellationToken);
     Task<IdeiaDetailsResponse> EditarAsync(long idaId, long usuarioId, UpdateIdeiaRequest request, CancellationToken cancellationToken);
     Task<IdeiaDetailsResponse> AlterarStatusAsync(long idaId, ChangeIdeiaStatusRequest request, CancellationToken cancellationToken);
     Task<IdeiaDocumentoResponse> UploadDocumentoAsync(long idaId, long usuarioId, Stream pdfStream, string fileName, CancellationToken cancellationToken);
+    Task<ComentarioResponse> ComentarAsync(long idaId, long usuarioId, CreateComentarioRequest request, CancellationToken cancellationToken);
 }
 
 public interface IPropostaService
 {
     Task<PropostaResponse> EnviarInicialAsync(long ideiaId, long usuarioId, CreatePropostaRequest request, CancellationToken cancellationToken);
     Task<PropostaResponse> ResponderAsync(long propostaId, long usuarioId, ResponderPropostaRequest request, CancellationToken cancellationToken);
+    Task<PropostaResponse> ResponderInvestidorAsync(long propostaId, long usuarioId, ResponderPropostaRequest request, CancellationToken cancellationToken);
     Task<List<PropostaResponse>> ListarMinhasAsync(long usuarioId, CancellationToken cancellationToken);
+    Task<List<PropostaResponse>> ListarRecebidasAsync(long empreendedorId, CancellationToken cancellationToken);
     Task<PropostaResponse> EncerrarAsync(long propostaId, long usuarioId, CancellationToken cancellationToken);
     Task<List<PropostaResponse>> ListarDaIdeiaAsync(long ideiaId, long donoId, CancellationToken cancellationToken); // ← NOVO
 }
@@ -59,6 +70,9 @@ public sealed class LogService : ILogService
             "cadastro" => 1,
             "edição" => 2,
             "edicao" => 2,
+            "comentário" => 2,
+            "comentario" => 2,
+            "plano" => 2,
             "proposta" => 3,
             "login" => 4,
             _ => 0
@@ -71,6 +85,7 @@ public sealed class LogService : ILogService
 
         var log = new TrnLog
         {
+            Id = 0,
             TipoId = tipoId,
             UsuarioId = usuarioId,
             IdeiaId = ideiaId,
@@ -88,35 +103,72 @@ public sealed class IdeiaService : IIdeiaService
 {
     private readonly IIdeiaRepository _ideias;
     private readonly ILookupRepository _lookup;
+    private readonly IUsuarioRepository _usuarios;
     private readonly IUnitOfWork _uow;
     private readonly IClock _clock;
     private readonly IFileStorage _fileStorage;
     private readonly ILogService _logs;
+    private readonly INotificacaoService _notificacoes;
 
-    public IdeiaService(IIdeiaRepository ideias, ILookupRepository lookup, IUnitOfWork uow, IClock clock, IFileStorage fileStorage, ILogService logs)
+    public IdeiaService(
+        IIdeiaRepository ideias, 
+        ILookupRepository lookup, 
+        IUsuarioRepository usuarios,
+        IUnitOfWork uow, 
+        IClock clock, 
+        IFileStorage fileStorage, 
+        ILogService logs,
+        INotificacaoService notificacoes)
     {
         _ideias = ideias;
         _lookup = lookup;
+        _usuarios = usuarios;
         _uow = uow;
         _clock = clock;
         _fileStorage = fileStorage;
         _logs = logs;
+        _notificacoes = notificacoes;
     }
 
     public async Task<IdeiaDetailsResponse> CadastrarAsync(long usuarioId, CreateIdeiaRequest request, CancellationToken cancellationToken)
     {
+        var usuario = await _usuarios.GetByIdAsync(usuarioId, cancellationToken)
+            ?? throw new AppException("Usuário não encontrado.", 404);
+
+        var cargo = (usuario.Cargo?.Nome ?? string.Empty).ToLowerInvariant();
+        var plano = (usuario.Plano?.Nome ?? string.Empty).ToLowerInvariant();
+
+        if (cargo == "empreendedor" && (plano == "" || plano == "basico"))
+        {
+            var ativas = await _ideias.CountAtivasByUsuarioAsync(usuarioId, cancellationToken);
+            if (ativas >= 2)
+            {
+                throw new AppException("Limite do plano básico: máximo de 2 ideias ativas. Assine o Pro para publicar ideias ilimitadas.", 403);
+            }
+        }
+
         if (await _lookup.GetIdeiaCategoriaByIdAsync(request.CategoriaId, cancellationToken) is null)
         {
             throw new AppException("Categoria inválida.", 400);
         }
 
+        if (await _lookup.GetIdeiaEstagioByIdAsync(request.EstagioId, cancellationToken) is null)
+        {
+            throw new AppException("Estágio inválido.", 400);
+        }
+
         var ideia = new IdaIdeia
         {
+            Id = 0,
             UsuarioId = usuarioId,
             StatusId = 1,
             MotivoStatus = null,
             CategoriaId = request.CategoriaId,
-            Nome = request.Nome.Trim()
+            EstagioId = request.EstagioId,
+            Nome = request.Nome.Trim(),
+            Regiao = request.Regiao?.Trim(),
+            CreateDate = _clock.UtcNow,
+            UpdateDate = _clock.UtcNow
         };
 
         ideia.Info = new IdaInfo
@@ -127,6 +179,12 @@ public sealed class IdeiaService : IIdeiaService
             LinkVideo = request.LinkVideo,
             Imagem = request.Imagem,
             Fatia = request.Fatia,
+            ValorCaptacao = request.ValorCaptacao,
+            Faturamento = request.Faturamento,
+            CustosMensais = request.CustosMensais,
+            TempoMercadoMeses = request.TempoMercadoMeses,
+            QuantidadeClientes = request.QuantidadeClientes,
+            FeedbackClientes = request.FeedbackClientes,
             CreateDate = _clock.UtcNow,
             UpdateDate = _clock.UtcNow
         };
@@ -137,9 +195,17 @@ public sealed class IdeiaService : IIdeiaService
         return await DetalhesAsync(ideia.Id, cancellationToken);
     }
 
-    public async Task<List<IdeiaDetailsResponse>> ListarAsync(int? categoriaId, CancellationToken cancellationToken)
+    public async Task<List<IdeiaDetailsResponse>> ListarAsync(
+        string? termo,
+        int? categoriaId,
+        int? estagioId,
+        string? regiao,
+        decimal? valorMin,
+        decimal? valorMax,
+        bool? apenasComDocumentos,
+        CancellationToken cancellationToken)
     {
-        var ideias = await _ideias.ListAsync(categoriaId, cancellationToken);
+        var ideias = await _ideias.ListAsync(termo, categoriaId, estagioId, regiao, valorMin, valorMax, apenasComDocumentos, cancellationToken);
         return ideias.Select(MapIdeia).ToList();
     }
 
@@ -177,10 +243,27 @@ public sealed class IdeiaService : IIdeiaService
             ideia.CategoriaId = request.CategoriaId.Value;
         }
 
+        if (request.EstagioId.HasValue)
+        {
+            if (await _lookup.GetIdeiaEstagioByIdAsync(request.EstagioId.Value, cancellationToken) is null)
+            {
+                throw new AppException("Estágio inválido.", 400);
+            }
+
+            ideia.EstagioId = request.EstagioId.Value;
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Nome))
         {
             ideia.Nome = request.Nome.Trim();
         }
+
+        if (request.Regiao is not null)
+        {
+            ideia.Regiao = request.Regiao.Trim();
+        }
+
+        ideia.UpdateDate = _clock.UtcNow;
 
         ideia.Info ??= new IdaInfo
         {
@@ -210,6 +293,30 @@ public sealed class IdeiaService : IIdeiaService
         if (request.Fatia.HasValue)
         {
             ideia.Info.Fatia = request.Fatia.Value;
+        }
+        if (request.ValorCaptacao.HasValue)
+        {
+            ideia.Info.ValorCaptacao = request.ValorCaptacao.Value;
+        }
+        if (request.Faturamento.HasValue)
+        {
+            ideia.Info.Faturamento = request.Faturamento.Value;
+        }
+        if (request.CustosMensais.HasValue)
+        {
+            ideia.Info.CustosMensais = request.CustosMensais.Value;
+        }
+        if (request.TempoMercadoMeses.HasValue)
+        {
+            ideia.Info.TempoMercadoMeses = request.TempoMercadoMeses.Value;
+        }
+        if (request.QuantidadeClientes.HasValue)
+        {
+            ideia.Info.QuantidadeClientes = request.QuantidadeClientes.Value;
+        }
+        if (request.FeedbackClientes is not null)
+        {
+            ideia.Info.FeedbackClientes = request.FeedbackClientes;
         }
 
         ideia.Info.UpdateDate = _clock.UtcNow;
@@ -271,14 +378,50 @@ public sealed class IdeiaService : IIdeiaService
         return new IdeiaDocumentoResponse(doc.Id, doc.Arquivo);
     }
 
+    public async Task<ComentarioResponse> ComentarAsync(long idaId, long usuarioId, CreateComentarioRequest request, CancellationToken cancellationToken)
+    {
+        var ideia = await _ideias.GetByIdAsync(idaId, cancellationToken);
+        if (ideia is null) throw new AppException("Ideia não encontrada.", 404);
+
+        var comentario = new IdaComentario
+        {
+            Id = 0,
+            IdeiaId = idaId,
+            UsuarioId = usuarioId,
+            ParentId = request.ParentId,
+            Texto = request.Texto.Trim(),
+            CreateDate = _clock.UtcNow,
+            UpdateDate = _clock.UtcNow
+        };
+
+        await _ideias.AddComentarioAsync(comentario, cancellationToken);
+        await _logs.RegistrarAsync("comentário", usuarioId, ideiaId: idaId, propostaId: null, descricao: $"Novo comentário na ideia {ideia.Nome}", cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
+
+        // Notificar o dono da ideia se não for ele mesmo comentando
+        if (ideia.UsuarioId != usuarioId)
+        {
+            await _notificacoes.DispararAsync(new DispararNotificacaoRequest(
+                UsuarioId: ideia.UsuarioId,
+                TipoId: 3,
+                Mensagem: $"Novo comentário na sua ideia '{ideia.Nome}'"
+            ), cancellationToken);
+        }
+
+        return MapComentario(comentario);
+    }
+
     private static IdeiaDetailsResponse MapIdeia(IdaIdeia i)
     {
         return new IdeiaDetailsResponse(
             IdaId: i.Id,
             IdaUsuarioId: i.UsuarioId,
             IdaNome: i.Nome,
+            Regiao: i.Regiao,
             IdaCategoriaId: i.CategoriaId,
             CategoriaNome: i.Categoria?.Nome ?? i.CategoriaId.ToString(),
+            IdaEstagioId: i.EstagioId,
+            EstagioNome: i.Estagio?.Nome ?? i.EstagioId.ToString(),
             IdaStatusId: i.StatusId,
             StatusNome: i.Status?.Nome ?? i.StatusId.ToString(),
             IdaMotivoStatus: i.MotivoStatus,
@@ -290,9 +433,29 @@ public sealed class IdeiaService : IIdeiaService
                     IdaInfoLinkVideo: i.Info.LinkVideo,
                     IdaInfoImagem: i.Info.Imagem,
                     IdaInfoFatia: i.Info.Fatia,
+                    IdaInfoValorCaptacao: i.Info.ValorCaptacao,
+                    IdaInfoFaturamento: i.Info.Faturamento,
+                    IdaInfoCustosMensais: i.Info.CustosMensais,
+                    IdaInfoTempoMercadoMeses: i.Info.TempoMercadoMeses,
+                    IdaInfoQuantidadeClientes: i.Info.QuantidadeClientes,
+                    IdaInfoFeedbackClientes: i.Info.FeedbackClientes,
                     CreateDate: i.Info.CreateDate,
                     UpdateDate: i.Info.UpdateDate),
-            Documentos: i.Documentos.Select(d => new IdeiaDocumentoResponse(d.Id, d.Arquivo)).ToList()
+            Documentos: i.Documentos.Select(d => new IdeiaDocumentoResponse(d.Id, $"/api/ideias/{i.Id}/documentos/{d.Id}/download")).ToList(),
+            Comentarios: i.Comentarios.Where(c => c.ParentId == null).Select(MapComentario).ToList()
+        );
+    }
+
+    private static ComentarioResponse MapComentario(IdaComentario c)
+    {
+        return new ComentarioResponse(
+            Id: c.Id,
+            UsuarioId: c.UsuarioId,
+            UsuarioNome: c.Usuario != null ? $"{c.Usuario.Nome} {c.Usuario.Sobrenome}" : "Usuário",
+            ParentId: c.ParentId,
+            Texto: c.Texto,
+            CreateDate: c.CreateDate,
+            Replies: c.Replies.Select(MapComentario).ToList()
         );
     }
 }
@@ -301,15 +464,30 @@ public sealed class PropostaService : IPropostaService
 {
     private readonly IPropostaRepository _propostas;
     private readonly IIdeiaRepository _ideias;
+    private readonly INotificacaoRepository _notificacoes;
     private readonly ILookupRepository _lookup;
     private readonly IUnitOfWork _uow;
     private readonly IClock _clock;
     private readonly ILogService _logs;
 
-    public PropostaService(IPropostaRepository propostas, IIdeiaRepository ideias, ILookupRepository lookup, IUnitOfWork uow, IClock clock, ILogService logs)
+    private const int NtfTipoPrpAceita = 1;
+    private const int NtfTipoPrpRecusada = 2;
+    private const int NtfTipoAlerta = 3;
+    private const int NtfTipoPrpRecebida = 5;
+    private const int NtfTipoPrpContraproposta = 6;
+
+    public PropostaService(
+        IPropostaRepository propostas,
+        IIdeiaRepository ideias,
+        INotificacaoRepository notificacoes,
+        ILookupRepository lookup,
+        IUnitOfWork uow,
+        IClock clock,
+        ILogService logs)
     {
         _propostas = propostas;
         _ideias = ideias;
+        _notificacoes = notificacoes;
         _lookup = lookup;
         _uow = uow;
         _clock = clock;
@@ -332,9 +510,12 @@ public sealed class PropostaService : IPropostaService
 
         var proposta = new PrpProposta
         {
+            Id = 0,
             IdeiaId = ideiaId,
             UsuarioId = usuarioId,
-            Status = true
+            Status = true,
+            CreateDate = _clock.UtcNow,
+            UpdateDate = _clock.UtcNow
         };
 
         proposta.Infos.Add(new PrpInfo
@@ -350,6 +531,20 @@ public sealed class PropostaService : IPropostaService
         });
 
         await _propostas.AddAsync(proposta, cancellationToken);
+        if (await _lookup.GetNotificacaoTipoByIdAsync(NtfTipoPrpRecebida, cancellationToken) is null)
+        {
+            throw new AppException("Configuração de notificação (prp recebida) inválida.", 500);
+        }
+
+        await _notificacoes.AddAsync(new NtfNotificacao
+        {
+            Id = 0,
+            UsuarioId = ideia.UsuarioId,
+            TipoId = NtfTipoPrpRecebida,
+            Mensagem = $"Você recebeu uma proposta na ideia '{ideia.Nome}'",
+            Lida = false,
+            CreateDate = _clock.UtcNow
+        }, cancellationToken);
         await _logs.RegistrarAsync("proposta", usuarioId: usuarioId, ideiaId: ideiaId, propostaId: null, descricao: $"Envio de proposta para ideia {ideia.Nome}", cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
         return await MapAsync(proposta.Id, cancellationToken);
@@ -379,6 +574,11 @@ public sealed class PropostaService : IPropostaService
             throw new AppException("Aceite inválido.", 400);
         }
 
+        if (request.AceiteId == 4 && string.IsNullOrWhiteSpace(request.Retorno))
+        {
+            throw new AppException("O retorno é obrigatório para contraproposta.", 400);
+        }
+
         proposta.Infos.Add(new PrpInfo
         {
             Id = 0,
@@ -392,7 +592,111 @@ public sealed class PropostaService : IPropostaService
         });
 
         _propostas.Update(proposta);
+
+        var notifTipoId = request.AceiteId switch
+        {
+            1 => NtfTipoPrpAceita,
+            2 => NtfTipoPrpRecusada,
+            4 => NtfTipoPrpContraproposta,
+            _ => NtfTipoAlerta
+        };
+
+        if (await _lookup.GetNotificacaoTipoByIdAsync(notifTipoId, cancellationToken) is null)
+        {
+            throw new AppException("Configuração de notificação inválida.", 500);
+        }
+
+        var mensagem = request.AceiteId switch
+        {
+            1 => $"Sua proposta para a ideia #{ideia.Id} foi aceita.",
+            2 => $"Sua proposta para a ideia #{ideia.Id} foi recusada.",
+            4 => $"O empreendedor enviou uma contraproposta na ideia #{ideia.Id}: \"{request.Retorno!.Trim()}\"",
+            _ => $"A proposta da ideia #{ideia.Id} teve uma atualização."
+        };
+
+        await _notificacoes.AddAsync(new NtfNotificacao
+        {
+            Id = 0,
+            UsuarioId = proposta.UsuarioId,
+            TipoId = notifTipoId,
+            Mensagem = mensagem,
+            Lida = false,
+            CreateDate = _clock.UtcNow
+        }, cancellationToken);
+
         await _logs.RegistrarAsync("proposta", usuarioId: usuarioId, ideiaId: ideia.Id, propostaId: proposta.Id, descricao: $"Resposta de proposta {proposta.Id} para ideia {ideia.Nome}", cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
+        return await MapAsync(proposta.Id, cancellationToken);
+    }
+
+    public async Task<PropostaResponse> ResponderInvestidorAsync(long propostaId, long usuarioId, ResponderPropostaRequest request, CancellationToken cancellationToken)
+    {
+        var proposta = await _propostas.GetByIdAsync(propostaId, cancellationToken);
+        if (proposta is null)
+        {
+            throw new AppException("Proposta não encontrada.", 404);
+        }
+
+        if (proposta.UsuarioId != usuarioId)
+        {
+            throw new AppException("Você não tem permissão para responder esta proposta.", 403);
+        }
+
+        if (request.AceiteId is not (1 or 2))
+        {
+            throw new AppException("Aceite inválido.", 400);
+        }
+
+        if (await _lookup.GetPropostaAceiteByIdAsync(request.AceiteId, cancellationToken) is null)
+        {
+            throw new AppException("Aceite inválido.", 400);
+        }
+
+        var ultima = proposta.Infos.OrderByDescending(i => i.CreateDate).FirstOrDefault();
+        if (ultima is null || ultima.AceiteId != 4 || string.IsNullOrWhiteSpace(ultima.Retorno))
+        {
+            throw new AppException("Não existe contraproposta pendente para responder.", 400);
+        }
+
+        proposta.Infos.Add(new PrpInfo
+        {
+            Id = 0,
+            Mensagem = null,
+            Valor = 0,
+            FatiaPret = 0,
+            AceiteId = request.AceiteId,
+            Retorno = null,
+            CreateDate = _clock.UtcNow,
+            UpdateDate = _clock.UtcNow
+        });
+
+        _propostas.Update(proposta);
+
+        var ideia = proposta.Ideia ?? await _ideias.GetByIdAsync(proposta.IdeiaId, cancellationToken);
+        if (ideia is null)
+        {
+            throw new AppException("Ideia não encontrada.", 404);
+        }
+
+        if (await _lookup.GetNotificacaoTipoByIdAsync(NtfTipoAlerta, cancellationToken) is null)
+        {
+            throw new AppException("Configuração de notificação inválida.", 500);
+        }
+
+        var mensagem = request.AceiteId == 1
+            ? $"O investidor aceitou a contraproposta na ideia #{ideia.Id}."
+            : $"O investidor recusou a contraproposta na ideia #{ideia.Id}.";
+
+        await _notificacoes.AddAsync(new NtfNotificacao
+        {
+            UsuarioId = ideia.UsuarioId,
+            TipoId = NtfTipoAlerta,
+            Mensagem = mensagem,
+            Lida = false,
+            CreateDate = _clock.UtcNow
+        }, cancellationToken);
+
+        await _logs.RegistrarAsync("proposta", usuarioId: usuarioId, ideiaId: ideia.Id, propostaId: proposta.Id, descricao: $"Resposta do investidor para contraproposta {proposta.Id}", cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
         return await MapAsync(proposta.Id, cancellationToken);
     }
@@ -400,6 +704,12 @@ public sealed class PropostaService : IPropostaService
     public async Task<List<PropostaResponse>> ListarMinhasAsync(long usuarioId, CancellationToken cancellationToken)
     {
         var propostas = await _propostas.ListByUsuarioAsync(usuarioId, cancellationToken);
+        return propostas.Select(Map).ToList();
+    }
+
+    public async Task<List<PropostaResponse>> ListarRecebidasAsync(long empreendedorId, CancellationToken cancellationToken)
+    {
+        var propostas = await _propostas.ListRecebidasAsync(empreendedorId, cancellationToken);
         return propostas.Select(Map).ToList();
     }
 
@@ -449,6 +759,15 @@ public sealed class PropostaService : IPropostaService
 
     private static PropostaResponse Map(PrpProposta p)
     {
+        var planoCodigo = p.Usuario?.Plano?.Nome;
+        var planoNome = planoCodigo switch
+        {
+            "elite" => "Elite",
+            "pro" => "Pro",
+            "basico" => "Básico",
+            _ => null
+        };
+
         return new PropostaResponse(
             PrpId: p.Id,
             PrpIdeiaId: p.IdeiaId,
@@ -465,7 +784,9 @@ public sealed class PropostaService : IPropostaService
                     Retorno: i.Retorno,
                     CreateDate: i.CreateDate,
                     UpdateDate: i.UpdateDate))
-                .ToList()
+                .ToList(),
+            InvestidorPlanoCodigo: planoCodigo,
+            InvestidorPlanoNome: planoNome
         );
     }
 }
@@ -476,13 +797,23 @@ public sealed class NotificacaoService : INotificacaoService
     private readonly ILookupRepository _lookup;
     private readonly IUnitOfWork _uow;
     private readonly IClock _clock;
+    private readonly IEmailService _email;
+    private readonly IUsuarioRepository _usuarios;
 
-    public NotificacaoService(INotificacaoRepository notificacoes, ILookupRepository lookup, IUnitOfWork uow, IClock clock)
+    public NotificacaoService(
+        INotificacaoRepository notificacoes, 
+        ILookupRepository lookup, 
+        IUnitOfWork uow, 
+        IClock clock,
+        IEmailService email,
+        IUsuarioRepository usuarios)
     {
         _notificacoes = notificacoes;
         _lookup = lookup;
         _uow = uow;
         _clock = clock;
+        _email = email;
+        _usuarios = usuarios;
     }
 
     public async Task<NotificacaoResponse> DispararAsync(DispararNotificacaoRequest request, CancellationToken cancellationToken)
@@ -495,6 +826,7 @@ public sealed class NotificacaoService : INotificacaoService
 
         var notif = new NtfNotificacao
         {
+            Id = 0,
             UsuarioId = request.UsuarioId,
             TipoId = request.TipoId,
             Mensagem = request.Mensagem,
@@ -504,6 +836,28 @@ public sealed class NotificacaoService : INotificacaoService
 
         await _notificacoes.AddAsync(notif, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
+
+        // Envio de E-mail Externo (Módulo 7)
+        var usuario = await _usuarios.GetByIdAsync(request.UsuarioId, cancellationToken);
+        if (usuario?.Perfil != null)
+        {
+            bool deveEnviar = request.TipoId switch
+            {
+                1 or 2 or 5 or 6 => usuario.Perfil.ReceberEmailPropostas, // Tipos de proposta
+                3 => usuario.Perfil.ReceberEmailAlertas,                 // Alertas
+                _ => usuario.Perfil.ReceberEmailMensagens                // Chat e outros
+            };
+
+            if (deveEnviar)
+            {
+                await _email.EnviarAsync(
+                    para: usuario.Email,
+                    assunto: $"[TCC Shark Tank] Nova Notificação: {tipo.Nome}",
+                    corpo: $"Olá {usuario.Nome},\n\nVocê recebeu uma nova notificação em nossa plataforma:\n\n\"{request.Mensagem}\"\n\nAcesse agora para conferir!",
+                    cancellationToken: cancellationToken
+                );
+            }
+        }
 
         return new NotificacaoResponse(notif.Id, notif.TipoId, tipo.Nome, notif.Mensagem, notif.Lida, notif.CreateDate);
     }

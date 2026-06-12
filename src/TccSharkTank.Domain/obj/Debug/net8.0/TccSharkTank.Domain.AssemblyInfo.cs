@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TccSharkTank.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c6c846909fd2f4aff3a02aa5bea0c41caf8b1a0c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+00dca5c44507295a77d9fdc95b830ef90840ae9c")]
 [assembly: System.Reflection.AssemblyProductAttribute("TccSharkTank.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TccSharkTank.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
